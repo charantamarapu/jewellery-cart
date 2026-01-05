@@ -9,7 +9,9 @@ export const ProductProvider = ({ children }) => {
         try {
             const response = await fetch('/api/products');
             const data = await response.json();
-            setProducts(data);
+            // Handle both paginated response and direct array
+            const productArray = data.products || data;
+            setProducts(Array.isArray(productArray) ? productArray : []);
         } catch (error) {
             console.error('Failed to fetch products:', error);
         }

@@ -1,41 +1,52 @@
+/* ===================================
+   ACCOUNT SETTINGS PAGE
+   =================================== */
+
 .account-settings-page {
     max-width: 800px;
     margin: 0 auto;
-    padding: 2rem 1rem;
+    padding: 2rem 1.5rem;
     min-height: 60vh;
 }
 
 .settings-container {
-    background: white;
-    padding: 2rem;
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    background: var(--white);
+    padding: 2.5rem;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+    border: 1px solid var(--border);
 }
 
 .account-settings-page h2 {
-    font-size: 1.8rem;
+    font-family: var(--font-heading);
+    font-size: 2rem;
     margin-bottom: 2rem;
-    color: #0F1111;
+    color: var(--text-primary);
     text-align: center;
+    font-weight: 600;
 }
 
+/* Settings Sections */
 .settings-section {
     margin-bottom: 2.5rem;
     padding-bottom: 2rem;
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px solid var(--border);
 }
 
 .settings-section:last-child {
     border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
 }
 
 .settings-section h3 {
-    font-size: 1.3rem;
+    font-size: 1.35rem;
     margin-bottom: 1.5rem;
-    color: #0F1111;
+    color: var(--text-primary);
     font-weight: 600;
 }
 
+/* Account Info */
 .account-info {
     display: flex;
     flex-direction: column;
@@ -45,129 +56,147 @@
 .info-item {
     display: flex;
     align-items: center;
-    padding: 1rem;
-    background: #f9f9f9;
-    border-radius: 6px;
+    padding: 1rem 1.25rem;
+    background: var(--bg-light);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border);
 }
 
 .info-item label {
     font-weight: 600;
     min-width: 100px;
-    color: #555;
+    color: var(--text-secondary);
 }
 
 .info-item span {
-    color: #0F1111;
+    color: var(--text-primary);
     font-size: 1rem;
 }
 
+/* Role Badge */
 .role-badge {
     display: inline-block;
     padding: 0.4rem 1rem;
-    background-color: #e77600;
-    color: white;
-    border-radius: 20px;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%);
+    color: var(--white);
+    border-radius: var(--radius-xl);
     font-size: 0.9rem;
     font-weight: 600;
+    text-transform: capitalize;
 }
 
+/* Seller Section */
 .seller-description {
-    color: #555;
-    line-height: 1.6;
+    color: var(--text-secondary);
+    line-height: 1.7;
     margin-bottom: 1.5rem;
     font-size: 1rem;
 }
 
 .seller-benefits {
     list-style: none;
-    padding: 1rem;
-    background: #f0f8f0;
-    border-left: 4px solid #28a745;
+    padding: 1.25rem 1.5rem;
+    background: var(--success-light);
+    border-left: 4px solid var(--success);
     margin-bottom: 1.5rem;
-    border-radius: 4px;
+    border-radius: var(--radius-md);
 }
 
 .seller-benefits li {
     padding: 0.5rem 0;
-    color: #333;
+    color: var(--text-primary);
     font-size: 0.95rem;
+    position: relative;
+    padding-left: 1.5rem;
 }
 
-.seller-benefits li:before {
-    content: '';
-    display: inline;
+.seller-benefits li::before {
+    content: '✓';
+    position: absolute;
+    left: 0;
+    color: var(--success);
+    font-weight: 700;
 }
 
+/* Become Seller Button */
 .become-seller-btn {
     width: 100%;
     padding: 1rem;
-    background-color: #ffd814;
-    border: 1px solid #fcd200;
-    border-radius: 8px;
-    font-weight: bold;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%);
+    color: var(--white);
+    border: none;
+    border-radius: var(--radius-md);
+    font-weight: 700;
     font-size: 1rem;
     cursor: pointer;
-    transition: all 0.2s;
-    color: #000;
+    transition: all var(--transition-fast);
 }
 
 .become-seller-btn:hover:not(:disabled) {
-    background-color: #f7ca00;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+    box-shadow: var(--shadow-hover);
+    transform: translateY(-2px);
 }
 
 .become-seller-btn:disabled {
-    background-color: #ddd;
-    border-color: #ccc;
+    background: var(--border);
+    color: var(--text-muted);
     cursor: not-allowed;
-    opacity: 0.6;
+    transform: none;
 }
 
+/* Seller Status */
 .seller-status-text {
-    color: #0F1111;
+    color: var(--text-primary);
     font-size: 1rem;
     margin-bottom: 1.5rem;
-    padding: 1rem;
-    background: #fff3e0;
-    border-radius: 6px;
-    border-left: 4px solid #e77600;
+    padding: 1rem 1.25rem;
+    background: var(--primary-light);
+    border-radius: var(--radius-md);
+    border-left: 4px solid var(--primary);
 }
 
 .seller-dashboard-link {
     display: inline-block;
-    padding: 0.8rem 1.5rem;
-    background-color: #e77600;
-    color: white;
+    padding: 0.875rem 1.75rem;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%);
+    color: var(--white);
     text-decoration: none;
-    border-radius: 8px;
+    border-radius: var(--radius-md);
     font-weight: 600;
-    transition: background-color 0.2s;
+    transition: all var(--transition-fast);
 }
 
 .seller-dashboard-link:hover {
-    background-color: #d96300;
+    box-shadow: var(--shadow-hover);
+    transform: translateY(-2px);
 }
 
+/* Messages */
 .message {
     padding: 1rem;
     margin-bottom: 1.5rem;
-    border-radius: 6px;
+    border-radius: var(--radius-md);
     font-weight: 500;
 }
 
 .message.success {
-    background-color: #d4edda;
-    border: 1px solid #c3e6cb;
+    background-color: var(--success-light);
+    border: 1px solid #C3E6CB;
     color: #155724;
 }
 
 .message.error {
-    background-color: #f8d7da;
-    border: 1px solid #f5c6cb;
-    color: #721c24;
+    background-color: var(--error-light);
+    border: 1px solid #F5C6CB;
+    color: #721C24;
 }
 
+/* Responsive */
 @media (max-width: 600px) {
+    .account-settings-page {
+        padding: 1.5rem 1rem;
+    }
+
     .settings-container {
         padding: 1.5rem;
     }
@@ -175,13 +204,14 @@
     .info-item {
         flex-direction: column;
         align-items: flex-start;
+        gap: 0.5rem;
     }
 
     .account-settings-page h2 {
-        font-size: 1.4rem;
+        font-size: 1.5rem;
     }
 
     .settings-section h3 {
-        font-size: 1.1rem;
+        font-size: 1.15rem;
     }
 }

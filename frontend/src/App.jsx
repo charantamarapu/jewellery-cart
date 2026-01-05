@@ -12,7 +12,9 @@ import AdminDashboard from './pages/AdminDashboard';
 import SellerDashboard from './pages/SellerDashboard';
 import AccountSettings from './pages/AccountSettings';
 import SearchResults from './pages/SearchResults';
+import SuperAdminPortal from './pages/SuperAdminPortal';
 import Footer from './components/Footer';
+import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
     return (
@@ -27,10 +29,31 @@ function App() {
                         <Route path="/cart" element={<Cart />} />
                         <Route path="/login" element={<Login />} />
                         <Route path="/register" element={<Register />} />
-                        <Route path="/checkout" element={<Checkout />} />
-                        <Route path="/admin" element={<AdminDashboard />} />
-                        <Route path="/seller-dashboard" element={<SellerDashboard />} />
-                        <Route path="/account-settings" element={<AccountSettings />} />
+                        <Route path="/checkout" element={
+                            <ProtectedRoute>
+                                <Checkout />
+                            </ProtectedRoute>
+                        } />
+                        <Route path="/admin" element={
+                            <ProtectedRoute requiredRoles={['admin', 'superadmin']}>
+                                <AdminDashboard />
+                            </ProtectedRoute>
+                        } />
+                        <Route path="/super-admin" element={
+                            <ProtectedRoute requiredRole="superadmin">
+                                <SuperAdminPortal />
+                            </ProtectedRoute>
+                        } />
+                        <Route path="/seller-dashboard" element={
+                            <ProtectedRoute requiredRoles={['seller', 'admin', 'superadmin']}>
+                                <SellerDashboard />
+                            </ProtectedRoute>
+                        } />
+                        <Route path="/account-settings" element={
+                            <ProtectedRoute>
+                                <AccountSettings />
+                            </ProtectedRoute>
+                        } />
                         <Route path="/search" element={<SearchResults />} />
                     </Routes>
                 </main>

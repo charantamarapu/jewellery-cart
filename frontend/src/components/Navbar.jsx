@@ -97,14 +97,24 @@ const Navbar = () => {
                 </Link>
                 {user ? (
                     <div className="navbar-user">
-                        <span className="user-greeting">Hi, {user.name}</span>
-                        <Link to="/account-settings" className="settings-link">Settings</Link>
-                        {user.role === 'admin' && <Link to="/admin" className="dashboard-link">Admin Dashboard</Link>}
-                        {(user.role === 'seller' || (user.roles && user.roles.includes('seller'))) && <Link to="/seller-dashboard" className="dashboard-link">Seller Dashboard</Link>}
-                        <button onClick={logout} className="logout-btn">Sign Out</button>
+                        <div className="user-info">
+                            <span className="user-greeting">Hi, {user.name}</span>
+                            {(user.role === 'superadmin' || (user.roles && user.roles.includes('superadmin'))) && (
+                                <span className="role-badge">Admin</span>
+                            )}
+                        </div>
+                        <div className="user-actions">
+                            <Link to="/account-settings" className="user-action-link">Settings</Link>
+                            {(user.role === 'superadmin' || (user.roles && user.roles.includes('superadmin'))) && (
+                                <Link to="/super-admin" className="user-action-link">Dashboard</Link>
+                            )}
+                            {user.role === 'admin' && <Link to="/admin" className="user-action-link">Dashboard</Link>}
+                            {(user.role === 'seller' || (user.roles && user.roles.includes('seller'))) && <Link to="/seller-dashboard" className="user-action-link">Seller</Link>}
+                            <button onClick={logout} className="logout-btn">Sign Out</button>
+                        </div>
                     </div>
                 ) : (
-                    <Link to="/login">Sign In</Link>
+                    <Link to="/login" className="sign-in-btn">Sign In</Link>
                 )}
             </div>
         </nav>

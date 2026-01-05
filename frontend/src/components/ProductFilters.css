@@ -1,0 +1,132 @@
+/* ===================================
+   PRODUCT FILTERS COMPONENT
+   =================================== */
+
+.product-filters {
+    background: var(--white);
+    border-radius: var(--radius-md);
+    padding: 1.5rem;
+    box-shadow: var(--shadow-sm);
+    margin-bottom: 2rem;
+    display: flex;
+    gap: 2rem;
+    flex-wrap: wrap;
+    align-items: flex-end;
+}
+
+.filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    min-width: 180px;
+}
+
+.filter-group label {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.filter-select {
+    padding: 0.75rem;
+    border: 2px solid var(--border);
+    border-radius: var(--radius-md);
+    font-size: 0.95rem;
+    background: var(--white);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.filter-select:hover,
+.filter-select:focus {
+    border-color: var(--primary);
+    outline: none;
+}
+
+/* Price Filter */
+.price-filter {
+    flex: 1;
+    min-width: 280px;
+}
+
+.price-inputs {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.price-input {
+    flex: 1;
+    padding: 0.75rem;
+    border: 2px solid var(--border);
+    border-radius: var(--radius-md);
+    font-size: 0.95rem;
+    transition: all var(--transition-fast);
+}
+
+.price-input:hover,
+.price-input:focus {
+    border-color: var(--primary);
+    outline: none;
+}
+
+.price-separator {
+    color: var(--text-muted);
+    font-weight: 600;
+}
+
+/* Filter Buttons */
+.apply-btn,
+.clear-btn {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: var(--radius-md);
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    white-space: nowrap;
+}
+
+.apply-btn {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%);
+    color: var(--white);
+}
+
+.apply-btn:hover {
+    background: linear-gradient(135deg, var(--primary-hover) 0%, var(--primary-dark) 100%);
+    box-shadow: var(--shadow-md);
+}
+
+.clear-btn {
+    background: var(--bg-light);
+    color: var(--text-secondary);
+    border: 2px solid var(--border);
+}
+
+.clear-btn:hover {
+    background: var(--white);
+    border-color: var(--primary);
+    color: var(--text-primary);
+}
+
+@media (max-width: 768px) {
+    .product-filters {
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .filter-group,
+    .price-filter {
+        min-width: 100%;
+    }
+
+    .price-inputs {
+        flex-wrap: wrap;
+    }
+
+    .apply-btn,
+    .clear-btn {
+        flex: 1;
+    }
+}

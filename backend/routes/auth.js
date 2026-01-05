@@ -6,6 +6,12 @@ import { getDB } from '../db.js';
 const router = express.Router();
 const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret';
 
+if (!process.env.JWT_SECRET) {
+    console.warn('⚠️  Using fallback JWT_SECRET. Set JWT_SECRET environment variable!');
+}
+
+const hasRole = (user, role) => user?.role === role || (Array.isArray(user?.roles) && user.roles.includes(role));
+
 // Middleware to verify JWT token
 export const authenticateToken = (req, res, next) => {
     const authHeader = req.headers['authorization'];
@@ -15,22 +21,32 @@ export const authenticateToken = (req, res, next) => {
 
     jwt.verify(token, JWT_SECRET, (err, user) => {
         if (err) return res.status(403).json({ message: 'Invalid token' });
-        req.user = user;
+        req.user = {
+            ...user,
+            roles: user.roles || []
+        };
         next();
     });
 };
 
 // Middleware to check if user is admin
 export const isAdmin = (req, res, next) => {
-    if (req.user.role !== 'admin') {
+    if (!hasRole(req.user, 'admin') && !hasRole(req.user, 'superadmin')) {
         return res.status(403).json({ message: 'Admin access required' });
+    }
+    next();
+};
+
+export const isSuperAdmin = (req, res, next) => {
+    if (!hasRole(req.user, 'superadmin')) {
+        return res.status(403).json({ message: 'Super admin access required' });
     }
     next();
 };
 
 // Middleware to check if user is seller or admin
 export const isSellerOrAdmin = (req, res, next) => {
-    if (req.user.role !== 'seller' && req.user.role !== 'admin') {
+    if (!hasRole(req.user, 'seller') && !hasRole(req.user, 'admin') && !hasRole(req.user, 'superadmin')) {
         return res.status(403).json({ message: 'Seller or Admin access required' });
     }
     next();
@@ -45,6 +61,17 @@ router.post('/register', async (req, res) => {
 
         if (!name || !email || !password) {
             return res.status(400).json({ message: 'Name, email, and password are required' });
+        }
+
+        // Basic input validation
+        if (name.length < 2 || name.length > 100) {
+            return res.status(400).json({ message: 'Name must be 2-100 characters' });
+        }
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+            return res.status(400).json({ message: 'Invalid email format' });
+        }
+        if (password.length < 6) {
+            return res.status(400).json({ message: 'Password must be at least 6 characters' });
         }
 
         const db = getDB();
@@ -92,8 +119,6 @@ router.post('/login', async (req, res) => {
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) return res.status(400).json({ message: 'Invalid credentials' });
 
-        const token = jwt.sign({ id: user.id, role: user.role }, JWT_SECRET, { expiresIn: '1h' });
-        
         // Parse roles JSON string
         let roles = [];
         try {
@@ -101,6 +126,8 @@ router.post('/login', async (req, res) => {
         } catch {
             roles = [user.role];
         }
+
+        const token = jwt.sign({ id: user.id, role: user.role, roles }, JWT_SECRET, { expiresIn: '1h' });
 
         res.json({
             token,
@@ -115,6 +142,33 @@ router.post('/login', async (req, res) => {
     } catch (err) {
         console.error('Login error:', err);
         res.status(500).json({ message: 'Login failed', error: err.message });
+    }
+});
+
+// Get current user from token
+router.get('/me', authenticateToken, async (req, res) => {
+    const db = getDB();
+    try {
+        const user = await db.get('SELECT id, name, email, role, roles, createdAt FROM users WHERE id = ?', [req.user.id]);
+        if (!user) return res.status(404).json({ message: 'User not found' });
+
+        let roles = [];
+        try {
+            roles = JSON.parse(user.roles);
+        } catch {
+            roles = [user.role];
+        }
+
+        res.json({
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            role: user.role,
+            roles: roles
+        });
+    } catch (err) {
+        console.error('Get current user error:', err);
+        res.status(500).json({ message: 'Failed to fetch user', error: err.message });
     }
 });
 

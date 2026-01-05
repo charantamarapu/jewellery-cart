@@ -70,6 +70,27 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
+    const refreshUser = async () => {
+        try {
+            const token = localStorage.getItem('token');
+            if (!token) return { success: false };
+
+            const response = await fetch('/api/auth/me', {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.message);
+
+            localStorage.setItem('user', JSON.stringify(data));
+            setUser(data);
+            return { success: true, user: data };
+        } catch (error) {
+            return { success: false, message: error.message };
+        }
+    };
+
     const logout = () => {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
@@ -77,7 +98,7 @@ export const AuthProvider = ({ children }) => {
     };
 
     return (
-        <AuthContext.Provider value={{ user, login, register, logout, becomeSeller, loading }}>
+        <AuthContext.Provider value={{ user, login, register, logout, becomeSeller, refreshUser, loading }}>
             {!loading && children}
         </AuthContext.Provider>
     );

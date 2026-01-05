@@ -38,6 +38,27 @@ router.post('/', authenticateToken, async (req, res) => {
     }
 
     try {
+        // Check stock availability for all items
+        for (const item of items) {
+            const product = await db.get('SELECT id, name, stock FROM products WHERE id = ?', [item.id]);
+            if (!product) {
+                return res.status(404).json({ message: `Product ${item.name || item.id} not found` });
+            }
+            if (product.stock < item.quantity) {
+                return res.status(400).json({ 
+                    message: `Insufficient stock for ${product.name}. Available: ${product.stock}, requested: ${item.quantity}` 
+                });
+            }
+        }
+
+        // Decrement stock for each item
+        for (const item of items) {
+            await db.run(
+                'UPDATE products SET stock = stock - ? WHERE id = ?',
+                [item.quantity, item.id]
+            );
+        }
+
         // Convert items and address to JSON strings for storage
         const itemsJSON = typeof items === 'string' ? items : JSON.stringify(items);
         const addressJSON = typeof address === 'string' ? address : JSON.stringify(address);

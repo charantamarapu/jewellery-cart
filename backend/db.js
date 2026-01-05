@@ -2,12 +2,15 @@ import Database from 'sqlite3';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import fs from 'fs';
+import bcrypt from 'bcryptjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const dbPath = path.join(__dirname, 'database.db');
 let db = null;
+const SUPER_ADMIN_EMAIL = process.env.SUPER_ADMIN_EMAIL || 'admin@abc.com';
+const SUPER_ADMIN_PASSWORD = process.env.SUPER_ADMIN_PASSWORD || 'Admin@2026';
 
 // Promise wrapper for database operations
 const dbGet = (sql, params = []) => {
@@ -76,10 +79,22 @@ export const setupDB = async () => {
                             name TEXT NOT NULL,
                             price REAL NOT NULL,
                             image TEXT NOT NULL,
+                            images TEXT DEFAULT '[]',
                             description TEXT,
+                            stock INTEGER DEFAULT 0,
+                            categoryId INTEGER,
                             sellerId INTEGER,
                             createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
-                            FOREIGN KEY (sellerId) REFERENCES users(id)
+                            FOREIGN KEY (sellerId) REFERENCES users(id),
+                            FOREIGN KEY (categoryId) REFERENCES categories(id)
+                        );
+
+                        CREATE TABLE IF NOT EXISTS categories (
+                            id INTEGER PRIMARY KEY AUTOINCREMENT,
+                            name TEXT UNIQUE NOT NULL,
+                            slug TEXT UNIQUE NOT NULL,
+                            description TEXT,
+                            createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
                         );
 
                         CREATE TABLE IF NOT EXISTS addresses (
@@ -106,10 +121,49 @@ export const setupDB = async () => {
                             FOREIGN KEY (addressId) REFERENCES addresses(id)
                         );
 
+                        CREATE TABLE IF NOT EXISTS audit_logs (
+                            id INTEGER PRIMARY KEY AUTOINCREMENT,
+                            adminId INTEGER NOT NULL,
+                            action TEXT NOT NULL,
+                            targetType TEXT,
+                            targetId INTEGER,
+                            details TEXT,
+                            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+                            FOREIGN KEY (adminId) REFERENCES users(id)
+                        );
+
+                        CREATE TABLE IF NOT EXISTS reviews (
+                            id INTEGER PRIMARY KEY AUTOINCREMENT,
+                            productId INTEGER NOT NULL,
+                            userId INTEGER NOT NULL,
+                            rating INTEGER NOT NULL CHECK(rating >= 1 AND rating <= 5),
+                            comment TEXT,
+                            createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+                            FOREIGN KEY (productId) REFERENCES products(id) ON DELETE CASCADE,
+                            FOREIGN KEY (userId) REFERENCES users(id),
+                            UNIQUE(productId, userId)
+                        );
+
+                        CREATE TABLE IF NOT EXISTS wishlist (
+                            id INTEGER PRIMARY KEY AUTOINCREMENT,
+                            userId INTEGER NOT NULL,
+                            productId INTEGER NOT NULL,
+                            createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+                            FOREIGN KEY (userId) REFERENCES users(id),
+                            FOREIGN KEY (productId) REFERENCES products(id) ON DELETE CASCADE,
+                            UNIQUE(userId, productId)
+                        );
+
                         CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
                         CREATE INDEX IF NOT EXISTS idx_products_sellerId ON products(sellerId);
+                        CREATE INDEX IF NOT EXISTS idx_products_categoryId ON products(categoryId);
                         CREATE INDEX IF NOT EXISTS idx_addresses_userId ON addresses(userId);
                         CREATE INDEX IF NOT EXISTS idx_orders_userId ON orders(userId);
+                        CREATE INDEX IF NOT EXISTS idx_audit_logs_adminId ON audit_logs(adminId);
+                        CREATE INDEX IF NOT EXISTS idx_reviews_productId ON reviews(productId);
+                        CREATE INDEX IF NOT EXISTS idx_reviews_userId ON reviews(userId);
+                        CREATE INDEX IF NOT EXISTS idx_wishlist_userId ON wishlist(userId);
+                        CREATE INDEX IF NOT EXISTS idx_wishlist_productId ON wishlist(productId);
                     `);
 
                     // Check if we need to migrate data from db.json
@@ -117,6 +171,39 @@ export const setupDB = async () => {
                     if (userCount.count === 0) {
                         await migrateFromJSON();
                     }
+
+                    // Add stock column if it doesn't exist (migration)
+                    try {
+                        await dbExec('ALTER TABLE products ADD COLUMN stock INTEGER DEFAULT 0');
+                        console.log('✅ Added stock column to products table');
+                    } catch (err) {
+                        if (!err.message.includes('duplicate column')) {
+                            console.warn('⚠️  Stock column migration warning:', err.message);
+                        }
+                    }
+
+                    // Add categoryId column if it doesn't exist
+                    try {
+                        await dbExec('ALTER TABLE products ADD COLUMN categoryId INTEGER');
+                        console.log('✅ Added categoryId column to products table');
+                    } catch (err) {
+                        if (!err.message.includes('duplicate column')) {
+                            console.warn('⚠️  CategoryId migration warning:', err.message);
+                        }
+                    }
+
+                    // Add images column if it doesn't exist
+                    try {
+                        await dbExec("ALTER TABLE products ADD COLUMN images TEXT DEFAULT '[]'");
+                        console.log('✅ Added images column to products table');
+                    } catch (err) {
+                        if (!err.message.includes('duplicate column')) {
+                            console.warn('⚠️  Images migration warning:', err.message);
+                        }
+                    }
+
+                    await ensureSuperAdmin();
+                    await seedDefaultCategories();
 
                     console.log('✅ SQLite Database connected and initialized');
                     resolve();
@@ -228,3 +315,61 @@ export const closeDB = () => {
         console.log('Database connection closed');
     }
 };
+
+async function ensureSuperAdmin() {
+    // Normalize configured super admin account
+    const existing = await dbGet('SELECT * FROM users WHERE email = ?', [SUPER_ADMIN_EMAIL]);
+    if (existing) {
+        const roles = ['superadmin', 'admin'];
+        await dbRun('UPDATE users SET role = ?, roles = ? WHERE email = ?', ['superadmin', JSON.stringify(roles), SUPER_ADMIN_EMAIL]);
+    } else {
+        const hashedPassword = await bcrypt.hash(SUPER_ADMIN_PASSWORD, 10);
+        await dbRun(
+            'INSERT INTO users (name, email, password, role, roles) VALUES (?, ?, ?, ?, ?)',
+            ['Super Admin', SUPER_ADMIN_EMAIL, hashedPassword, 'superadmin', JSON.stringify(['superadmin', 'admin'])]
+        );
+        console.log('✅ Seeded default super admin');
+    }
+
+    // Remove superadmin role from any other accounts
+    const imposters = await dbAll(
+        "SELECT id, role, roles FROM users WHERE email != ? AND (role = 'superadmin' OR roles LIKE '%superadmin%')",
+        [SUPER_ADMIN_EMAIL]
+    );
+    for (const user of imposters) {
+        let parsed = [];
+        try {
+            parsed = JSON.parse(user.roles || '[]');
+        } catch {
+            parsed = [user.role].filter(Boolean);
+        }
+        parsed = parsed.filter((r) => r !== 'superadmin');
+        const primary = parsed[0] || 'admin';
+        await dbRun('UPDATE users SET role = ?, roles = ? WHERE id = ?', [primary, JSON.stringify(parsed.length ? parsed : ['admin']), user.id]);
+    }
+}
+
+async function seedDefaultCategories() {
+    const categories = [
+        { name: 'Rings', slug: 'rings', description: 'Beautiful rings for every occasion' },
+        { name: 'Necklaces', slug: 'necklaces', description: 'Elegant necklaces and pendants' },
+        { name: 'Earrings', slug: 'earrings', description: 'Stunning earrings collection' },
+        { name: 'Bracelets', slug: 'bracelets', description: 'Charming bracelets and bangles' },
+        { name: 'Anklets', slug: 'anklets', description: 'Delicate anklets' },
+        { name: 'Pendants', slug: 'pendants', description: 'Exquisite pendants' },
+        { name: 'Chains', slug: 'chains', description: 'Gold and silver chains' },
+        { name: 'Bridal', slug: 'bridal', description: 'Special bridal collection' }
+    ];
+
+    for (const cat of categories) {
+        try {
+            await dbRun(
+                'INSERT OR IGNORE INTO categories (name, slug, description) VALUES (?, ?, ?)',
+                [cat.name, cat.slug, cat.description]
+            );
+        } catch (err) {
+            // Ignore duplicates
+        }
+    }
+    console.log('✅ Seeded default categories');
+}

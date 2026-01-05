@@ -5,7 +5,7 @@ import './Home.css';
 
 const Home = () => {
   const { products } = useProducts();
-  const featuredProducts = products.slice(0, 4);
+  const featuredProducts = Array.isArray(products) ? products.slice(0, 4) : [];
 
   return (
     <section className="home-section">
@@ -23,14 +23,18 @@ const Home = () => {
       <div className="featured-products">
         <h2>Featured Products</h2>
         <div className="product-grid">
-          {featuredProducts.map((product) => (
-            <div key={product.id} className="product-card">
-              <img src={product.image} alt={product.name} className="product-image" />
-              <h3>{product.name}</h3>
-              <p className="price">₹{product.price.toFixed(2)}</p>
-              <Link to={`/product/${product.id}`} className="view-details-btn">View Details</Link>
-            </div>
-          ))}
+          {featuredProducts.length > 0 ? (
+            featuredProducts.map((product) => (
+              <div key={product.id} className="product-card">
+                <img src={product.image} alt={product.name} className="product-image" />
+                <h3>{product.name}</h3>
+                <p className="price">₹{product.price.toFixed(2)}</p>
+                <Link to={`/product/${product.id}`} className="view-details-btn">View Details</Link>
+              </div>
+            ))
+          ) : (
+            <p style={{ gridColumn: '1 / -1', textAlign: 'center' }}>Loading featured products...</p>
+          )}
         </div>
       </div>
     </section>

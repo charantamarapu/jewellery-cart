@@ -1,133 +1,142 @@
+/* ===================================
+   CHECKOUT PAGE
+   =================================== */
+
 .checkout-page {
     max-width: 1200px;
     margin: 0 auto;
-    padding: 2rem 1rem;
+    padding: 2rem 1.5rem;
     min-height: 60vh;
 }
 
 .checkout-page h2 {
-    font-size: 1.8rem;
+    font-family: var(--font-heading);
+    font-size: 2rem;
     margin-bottom: 1.5rem;
-    color: #0F1111;
+    color: var(--text-primary);
+    font-weight: 600;
 }
 
+/* Checkout Container */
 .checkout-container {
     display: grid;
-    grid-template-columns: 1fr 350px;
-    gap: 1.5rem;
+    grid-template-columns: 1fr 380px;
+    gap: 2rem;
 }
 
-@media (max-width: 768px) {
-    .checkout-container {
-        grid-template-columns: 1fr;
-    }
-    
-    .order-summary-sidebar {
-        position: static;
-    }
-}
-
+/* Checkout Form */
 .checkout-form {
-    background: white;
+    background: var(--white);
     padding: 2rem;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    box-shadow: var(--shadow-sm);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border);
 }
 
 .checkout-form h3 {
     margin-bottom: 1.5rem;
-    padding-bottom: 0.5rem;
-    border-bottom: 1px solid #eee;
-    font-size: 1.2rem;
-    color: #0F1111;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--border);
+    font-size: 1.25rem;
+    color: var(--text-primary);
+    font-weight: 600;
 }
 
 .checkout-form .form-group {
-    margin-bottom: 1.2rem;
+    margin-bottom: 1.25rem;
 }
 
 .checkout-form .form-group label {
     display: block;
-    font-weight: bold;
-    margin-bottom: 0.4rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
     font-size: 0.9rem;
-    color: #111;
+    color: var(--text-primary);
 }
 
 .checkout-form .form-group input {
     width: 100%;
-    padding: 0.7rem;
-    border: 1px solid #888;
-    border-radius: 4px;
+    padding: 0.875rem 1rem;
+    border: 2px solid var(--border);
+    border-radius: var(--radius-md);
     font-size: 1rem;
-    transition: border-color 0.2s;
+    transition: all var(--transition-fast);
     box-sizing: border-box;
 }
 
 .checkout-form .form-group input:focus {
     outline: none;
-    border-color: #e77600;
-    box-shadow: 0 0 3px rgba(231, 118, 0, 0.2);
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.15);
 }
 
+/* Order Summary Sidebar */
 .order-summary-sidebar {
-    background: white;
+    background: var(--white);
     padding: 1.5rem;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    box-shadow: var(--shadow-sm);
     position: sticky;
     top: 80px;
     height: fit-content;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border);
 }
 
 .order-summary-sidebar h3 {
-    font-size: 1.2rem;
+    font-size: 1.25rem;
     margin-bottom: 1rem;
-    color: #0F1111;
+    color: var(--text-primary);
+    font-weight: 600;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--border);
 }
 
 .summary-item {
     display: flex;
     justify-content: space-between;
-    padding: 0.5rem 0;
-    border-bottom: 1px solid #eee;
-    font-size: 0.9rem;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.95rem;
+    color: var(--text-secondary);
 }
 
 .summary-total {
     margin-top: 1rem;
     padding-top: 1rem;
-    border-top: 2px solid #ddd;
-    font-size: 1.1rem;
-    color: #B12704;
-    font-weight: bold;
+    border-top: 2px solid var(--border-dark);
+    font-size: 1.2rem;
+    color: var(--primary);
+    font-weight: 700;
 }
 
+/* Place Order Button */
 .place-order-btn {
     width: 100%;
     padding: 1rem;
-    background-color: #ffd814;
-    border: 1px solid #fcd200;
-    border-radius: 8px;
-    font-weight: bold;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%);
+    color: var(--white);
+    border: none;
+    border-radius: var(--radius-md);
+    font-weight: 700;
     cursor: pointer;
     margin-top: 1.5rem;
-    transition: background-color 0.2s, box-shadow 0.2s;
+    transition: all var(--transition-fast);
     font-size: 1rem;
-    color: #000;
 }
 
 .place-order-btn:hover:not(:disabled) {
-    background-color: #f7ca00;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+    box-shadow: var(--shadow-hover);
+    transform: translateY(-2px);
 }
 
 .place-order-btn:disabled {
-    background-color: #ddd;
-    border-color: #ccc;
+    background: var(--border);
+    color: var(--text-muted);
     cursor: not-allowed;
-    opacity: 0.6;
+    transform: none;
 }
 
-/* Address selection styles */
+/* Address Section */
 .address-section {
     margin-bottom: 2rem;
 }
@@ -140,65 +149,72 @@
 }
 
 .address-option {
-    border: 2px solid #ddd;
-    border-radius: 8px;
+    border: 2px solid var(--border);
+    border-radius: var(--radius-md);
     padding: 1rem;
     cursor: pointer;
-    transition: border-color 0.2s, background-color 0.2s;
+    transition: all var(--transition-fast);
 }
 
 .address-option:hover {
-    border-color: #e77600;
-    background-color: #f9f9f9;
+    border-color: var(--primary);
+    background-color: var(--primary-light);
 }
 
 .address-option input[type="radio"] {
-    margin-right: 0.5rem;
+    margin-right: 0.75rem;
     cursor: pointer;
+    accent-color: var(--primary);
 }
 
 .address-option.selected {
-    border-color: #e77600;
-    background-color: #fff3e0;
+    border-color: var(--primary);
+    background-color: var(--primary-light);
 }
 
 .address-label {
     display: flex;
     align-items: center;
     cursor: pointer;
-    font-weight: 500;
+    font-weight: 600;
+    color: var(--text-primary);
 }
 
 .address-details {
-    margin-left: 1.8rem;
+    margin-left: 1.75rem;
     margin-top: 0.5rem;
     font-size: 0.9rem;
-    color: #555;
+    color: var(--text-secondary);
+    line-height: 1.5;
 }
 
+/* Add New Address Button */
 .add-new-address-btn {
-    padding: 0.8rem 1rem;
-    background-color: white;
-    border: 2px solid #e77600;
-    border-radius: 8px;
-    color: #e77600;
-    font-weight: bold;
+    padding: 0.875rem 1rem;
+    background-color: var(--white);
+    border: 2px solid var(--primary);
+    border-radius: var(--radius-md);
+    color: var(--primary);
+    font-weight: 600;
     cursor: pointer;
-    transition: background-color 0.2s;
+    transition: all var(--transition-fast);
     width: 100%;
     margin-top: 1rem;
     font-size: 1rem;
 }
 
 .add-new-address-btn:hover {
-    background-color: #fff3e0;
+    background-color: var(--primary-light);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-sm);
 }
 
+/* Address Form */
 .address-form {
-    background: #f9f9f9;
+    background: var(--bg-light);
     padding: 1.5rem;
-    border-radius: 8px;
-    border: 1px solid #ddd;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border);
 }
 
 .address-form .form-group {
@@ -207,63 +223,80 @@
 
 .address-form .form-group label {
     display: block;
-    font-weight: bold;
-    margin-bottom: 0.4rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
     font-size: 0.9rem;
-    color: #111;
+    color: var(--text-primary);
 }
 
 .address-form .form-group input {
     width: 100%;
-    padding: 0.7rem;
-    border: 1px solid #888;
-    border-radius: 4px;
+    padding: 0.875rem 1rem;
+    border: 2px solid var(--border);
+    border-radius: var(--radius-md);
     font-size: 1rem;
-    transition: border-color 0.2s;
+    transition: all var(--transition-fast);
     box-sizing: border-box;
 }
 
 .address-form .form-group input:focus {
     outline: none;
-    border-color: #e77600;
-    box-shadow: 0 0 3px rgba(231, 118, 0, 0.2);
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.15);
 }
 
 .address-form button {
-    padding: 0.8rem 1rem;
-    border-radius: 8px;
-    font-weight: bold;
+    padding: 0.875rem 1.25rem;
+    border-radius: var(--radius-md);
+    font-weight: 600;
     cursor: pointer;
     font-size: 0.95rem;
-    transition: all 0.2s;
-    border: 1px solid transparent;
+    transition: all var(--transition-fast);
+    border: none;
     flex: 1;
 }
 
 .address-form button[type="submit"] {
-    background-color: #ffd814;
-    border: 1px solid #fcd200;
-    color: #000;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%);
+    color: var(--white);
 }
 
 .address-form button[type="submit"]:hover:not(:disabled) {
-    background-color: #f7ca00;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+    box-shadow: var(--shadow-md);
 }
 
 .address-form button[type="submit"]:disabled {
-    background-color: #ddd;
-    border-color: #ccc;
+    background: var(--border);
+    color: var(--text-muted);
     cursor: not-allowed;
-    opacity: 0.6;
 }
 
 .address-form button[type="button"] {
-    background-color: #f7f8f8;
-    border: 1px solid #d5d9d9;
-    color: #111;
+    background-color: var(--bg-light);
+    border: 2px solid var(--border);
+    color: var(--text-primary);
 }
 
 .address-form button[type="button"]:hover {
-    background-color: #e7e9ec;
+    background-color: var(--white);
+    border-color: var(--primary);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .checkout-page {
+        padding: 1.5rem 1rem;
+    }
+
+    .checkout-container {
+        grid-template-columns: 1fr;
+    }
+
+    .order-summary-sidebar {
+        position: static;
+    }
+
+    .checkout-form {
+        padding: 1.5rem;
+    }
 }
