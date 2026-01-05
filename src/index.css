@@ -1,0 +1,66 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #eaeded;
+  color: #111;
+  min-height: 100vh;
+}
+
+.app {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.main-content {
+  flex: 1;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+ul {
+  list-style: none;
+}
+
+/* Common container patterns */
+.page-container {
+  max-width: 1500px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+/* Button variants */
+.btn-amazon {
+  background-color: #D4AF37;
+  border: 1px solid #B4941F;
+  color: #fff;
+  padding: 0.6rem 1.2rem;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.2s;
+  letter-spacing: 0.5px;
+}
+
+.btn-amazon:hover {
+  background-color: #C5A059;
+}
+
+.btn-secondary {
+  background-color: #eff1f3;
+  border: 1px solid #d5d9d9;
+  padding: 0.6rem 1.2rem;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.btn-secondary:hover {
+  background-color: #e7e9ec;
+}

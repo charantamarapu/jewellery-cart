@@ -1,0 +1,117 @@
+{
+  "users": [
+    {
+      "id": 1767595893832,
+      "name": "Test",
+      "email": "test@test.com",
+      "password": "$2a$10$AZb/Xrl54DUU4QACRd/wSeH.tJ2PT5E6Fk/7.kkVSD7X2zwmJt1Xq",
+      "role": "admin"
+    }
+  ],
+  "products": [
+    {
+      "id": 1,
+      "name": "18k Gold Diamond Solitaire Ring",
+      "price": 1299.99,
+      "image": "https://images.unsplash.com/photo-1605100804763-ebea23bee0a4?auto=format&fit=crop&w=800&q=80",
+      "description": "Elegant 18k gold solitaire ring featuring a brilliant cut diamond. Perfect for engagements or special occasions."
+    },
+    {
+      "id": 2,
+      "name": "White Gold Pearl Necklace",
+      "price": 549.50,
+      "image": "https://images.unsplash.com/photo-1599643478518-17488fbbcd75?auto=format&fit=crop&w=800&q=80",
+      "description": "Classic white gold chain nestled with a lustrous freshwater pearl. A timeless piece for any collection."
+    },
+    {
+      "id": 3,
+      "name": "Sterling Silver Charm Bracelet",
+      "price": 120.00,
+      "image": "https://images.unsplash.com/photo-1611591437281-460bfbe1220a?auto=format&fit=crop&w=800&q=80",
+      "description": "Handcrafted sterling silver bracelet with intricate charms. Customizable and dainty."
+    },
+    {
+      "id": 4,
+      "name": "Emerald & Diamond Earrings",
+      "price": 899.00,
+      "image": "https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?auto=format&fit=crop&w=800&q=80",
+      "description": "Stunning emerald studs surrounded by a halo of conflict-free diamonds."
+    },
+    {
+      "id": 5,
+      "name": "Rose Gold Bangle",
+      "price": 350.00,
+      "image": "https://images.unsplash.com/photo-1602751584552-8ba43d4c3104?auto=format&fit=crop&w=800&q=80",
+      "description": "Minimalist rose gold bangle with a polished finish. Ideal for stacking or wearing alone."
+    },
+    {
+      "id": 6,
+      "name": "Sapphire Pendant Necklace",
+      "price": 750.00,
+      "image": "https://images.unsplash.com/photo-1603974372039-adc49044b6bd?auto=format&fit=crop&w=800&q=80",
+      "description": "Deep blue sapphire pendant set in platinum. A majestic addition to your evening wear."
+    },
+    {
+      "id": 7,
+      "name": "Vintage Ruby Ring",
+      "price": 2100.00,
+      "image": "https://images.unsplash.com/photo-1605100804763-ebea23bee0a4?auto=format&fit=crop&w=800&q=80",
+      "description": "Restored vintage ring featuring a central ruby stone with detailed filigree work."
+    },
+    {
+      "id": 8,
+      "name": "Crystal Choker",
+      "price": 85.00,
+      "image": "https://images.unsplash.com/photo-1599643477877-53135375f27e?auto=format&fit=crop&w=800&q=80",
+      "description": "Modern crystal choker adds a touch of sparkle to any outfit. Adjustable length."
+    }
+  ],
+  "orders": [
+    {
+      "id": 1767596255772,
+      "userId": 1767595893832,
+      "items": [
+        {
+          "id": 1,
+          "name": "Wireless Headphones",
+          "price": 99.99,
+          "image": "https://via.placeholder.com/150",
+          "description": "High quality wireless headphones with noise cancellation.",
+          "quantity": 1
+        }
+      ],
+      "total": 99.99,
+      "address": {
+        "fullName": "Test User",
+        "addressLine1": "123 Test St",
+        "city": "Test City",
+        "zip": "12345"
+      },
+      "date": "2026-01-05T06:57:35.772Z",
+      "status": "Pending"
+    },
+    {
+      "id": 1767597409780,
+      "userId": 1767595893832,
+      "items": [
+        {
+          "id": 1767597369682,
+          "name": "Apple car",
+          "price": 100000,
+          "description": "chumma",
+          "image": "https://supercarblondie.com/wp-content/uploads/Untitled-design-_52_.webp",
+          "quantity": 1
+        }
+      ],
+      "total": 100000,
+      "address": {
+        "fullName": "Test User",
+        "addressLine1": "123 Test St",
+        "city": "Test City",
+        "zip": "12345"
+      },
+      "date": "2026-01-05T07:16:49.780Z",
+      "status": "Pending"
+    }
+  ]
+}

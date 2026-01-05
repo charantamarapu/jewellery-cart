@@ -1,0 +1,64 @@
+.admin-page {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+}
+
+.admin-content {
+    display: grid;
+    grid-template-columns: 400px 1fr;
+    gap: 2rem;
+}
+
+.add-product-section,
+.product-list-section {
+    background: white;
+    padding: 1.5rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.admin-form .form-group {
+    margin-bottom: 1rem;
+}
+
+.admin-form label {
+    display: block;
+    font-size: 0.9rem;
+    font-weight: bold;
+    margin-bottom: 0.3rem;
+}
+
+.admin-form input,
+.admin-form textarea {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid #888;
+    border-radius: 3px;
+}
+
+.admin-product-item {
+    display: flex;
+    align-items: center;
+    padding: 1rem 0;
+    border-bottom: 1px solid #eee;
+}
+
+.admin-product-thumb {
+    width: 60px;
+    height: 60px;
+    object-fit: contain;
+    margin-right: 1rem;
+}
+
+.delete-btn {
+    background-color: #fff;
+    border: 1px solid #d5d9d9;
+    padding: 0.4rem 0.8rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    cursor: pointer;
+}
+
+.delete-btn:hover {
+    background-color: #f7f8f8;
+}
