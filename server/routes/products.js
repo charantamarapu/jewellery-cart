@@ -39,7 +39,9 @@ router.post('/', authenticateToken, isSellerOrAdmin, async (req, res) => {
     db.data.products.push(newProduct);
     await db.write();
     res.status(201).json(newProduct);
-});Update product (Admin or product owner)
+});
+
+// Update product (Admin or product owner)
 router.put('/:id', authenticateToken, isSellerOrAdmin, async (req, res) => {
     const { name, price, description, image } = req.body;
     const db = getDB();

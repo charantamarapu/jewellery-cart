@@ -9,7 +9,7 @@ router.get('/', async (req, res) => {
     await db.read();
 
     // In a real app, verify JWT and filter by user ID from token
-    // For this clone, we'll just return all orders for now or filter by query param
+    // For this app, we'll just return all orders for now or filter by query param
     const userId = req.query.userId;
     if (userId) {
         const userOrders = db.data.orders.filter(o => o.userId === parseInt(userId));

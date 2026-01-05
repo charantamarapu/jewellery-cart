@@ -1,7 +1,7 @@
 {
-  "name": "amazon-clone-server",
+  "name": "Jewellery-Cart-server",
   "version": "1.0.0",
-  "description": "Backend for Amazon Clone",
+  "description": "Backend for Jewellery-Cart",
   "main": "server.js",
   "type": "module",
   "scripts": {

@@ -52,7 +52,7 @@ textarea:focus {
 }
 
 /* Button variants */
-.btn-amazon {
+.btn-JewelleryCart {
   background-color: #D4AF37;
   border: 1px solid #B4941F;
   color: #fff;
@@ -63,7 +63,7 @@ textarea:focus {
   letter-spacing: 0.5px;
 }
 
-.btn-amazon:hover {
+.btn-JewelleryCart:hover {
   background-color: #C5A059;
 }
 

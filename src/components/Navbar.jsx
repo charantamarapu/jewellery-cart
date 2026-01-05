@@ -63,7 +63,7 @@ const Navbar = () => {
     return (
         <nav className="navbar">
             <div className="navbar-logo">
-                <Link to="/">Luxe Gems</Link>
+                <Link to="/">Jewellery-Cart</Link>
             </div>
             <div className="navbar-search-container" ref={searchRef}>
                 <form className="navbar-search" onSubmit={handleSearch}>

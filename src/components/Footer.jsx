@@ -13,14 +13,14 @@ const Footer = () => {
                     <ul>
                         <li>Careers</li>
                         <li>Blog</li>
-                        <li>About Luxe Gems</li>
+                        <li>About Jewellery-Cart</li>
                         <li>Investor Relations</li>
                     </ul>
                 </div>
                 <div className="footer-section">
                     <h3>Make Money with Us</h3>
                     <ul>
-                        <li>Sell products on Luxe Gems</li>
+                        <li>Sell products on Jewellery-Cart</li>
                         <li>Become a Partner</li>
                         <li>Advertise Your Products</li>
                         <li>Become an Affiliate</li>
@@ -46,10 +46,10 @@ const Footer = () => {
                 </div>
             </div>
             <div className="footer-logo">
-                <div className="logo-inner">Luxe Gems</div>
+                <div className="logo-inner">Jewellery-Cart</div>
             </div>
             <div className="footer-bottom">
-                <p>© 2026, Luxe Gems, Inc. or its affiliates</p>
+                <p>© 2026, Jewellery-Cart, Inc. or its affiliates</p>
             </div>
         </footer>
     );

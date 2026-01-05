@@ -23,7 +23,7 @@ app.use('/api/products', productRoutes);
 app.use('/api/orders', orderRoutes);
 
 app.get('/', (req, res) => {
-    res.send('Amazon Clone API is running');
+    res.send('Jewellery-Cart API is running');
 });
 
 app.listen(PORT, () => {
