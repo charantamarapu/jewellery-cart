@@ -1,0 +1,187 @@
+.account-settings-page {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+    min-height: 60vh;
+}
+
+.settings-container {
+    background: white;
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.account-settings-page h2 {
+    font-size: 1.8rem;
+    margin-bottom: 2rem;
+    color: #0F1111;
+    text-align: center;
+}
+
+.settings-section {
+    margin-bottom: 2.5rem;
+    padding-bottom: 2rem;
+    border-bottom: 1px solid #eee;
+}
+
+.settings-section:last-child {
+    border-bottom: none;
+}
+
+.settings-section h3 {
+    font-size: 1.3rem;
+    margin-bottom: 1.5rem;
+    color: #0F1111;
+    font-weight: 600;
+}
+
+.account-info {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.info-item {
+    display: flex;
+    align-items: center;
+    padding: 1rem;
+    background: #f9f9f9;
+    border-radius: 6px;
+}
+
+.info-item label {
+    font-weight: 600;
+    min-width: 100px;
+    color: #555;
+}
+
+.info-item span {
+    color: #0F1111;
+    font-size: 1rem;
+}
+
+.role-badge {
+    display: inline-block;
+    padding: 0.4rem 1rem;
+    background-color: #e77600;
+    color: white;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.seller-description {
+    color: #555;
+    line-height: 1.6;
+    margin-bottom: 1.5rem;
+    font-size: 1rem;
+}
+
+.seller-benefits {
+    list-style: none;
+    padding: 1rem;
+    background: #f0f8f0;
+    border-left: 4px solid #28a745;
+    margin-bottom: 1.5rem;
+    border-radius: 4px;
+}
+
+.seller-benefits li {
+    padding: 0.5rem 0;
+    color: #333;
+    font-size: 0.95rem;
+}
+
+.seller-benefits li:before {
+    content: '';
+    display: inline;
+}
+
+.become-seller-btn {
+    width: 100%;
+    padding: 1rem;
+    background-color: #ffd814;
+    border: 1px solid #fcd200;
+    border-radius: 8px;
+    font-weight: bold;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    color: #000;
+}
+
+.become-seller-btn:hover:not(:disabled) {
+    background-color: #f7ca00;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+}
+
+.become-seller-btn:disabled {
+    background-color: #ddd;
+    border-color: #ccc;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.seller-status-text {
+    color: #0F1111;
+    font-size: 1rem;
+    margin-bottom: 1.5rem;
+    padding: 1rem;
+    background: #fff3e0;
+    border-radius: 6px;
+    border-left: 4px solid #e77600;
+}
+
+.seller-dashboard-link {
+    display: inline-block;
+    padding: 0.8rem 1.5rem;
+    background-color: #e77600;
+    color: white;
+    text-decoration: none;
+    border-radius: 8px;
+    font-weight: 600;
+    transition: background-color 0.2s;
+}
+
+.seller-dashboard-link:hover {
+    background-color: #d96300;
+}
+
+.message {
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+    border-radius: 6px;
+    font-weight: 500;
+}
+
+.message.success {
+    background-color: #d4edda;
+    border: 1px solid #c3e6cb;
+    color: #155724;
+}
+
+.message.error {
+    background-color: #f8d7da;
+    border: 1px solid #f5c6cb;
+    color: #721c24;
+}
+
+@media (max-width: 600px) {
+    .settings-container {
+        padding: 1.5rem;
+    }
+
+    .info-item {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .account-settings-page h2 {
+        font-size: 1.4rem;
+    }
+
+    .settings-section h3 {
+        font-size: 1.1rem;
+    }
+}

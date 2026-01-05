@@ -26,7 +26,7 @@ const Cart = () => {
                             <img src={item.image} alt={item.name} className="cart-item-image" />
                             <div className="cart-item-info">
                                 <h3>{item.name}</h3>
-                                <p className="cart-item-price">${item.price.toFixed(2)}</p>
+                                <p className="cart-item-price">₹{item.price.toFixed(2)}</p>
                                 <div className="quantity-controls">
                                     <button onClick={() => updateQuantity(item.id, item.quantity - 1)}>-</button>
                                     <span>{item.quantity}</span>
@@ -39,7 +39,7 @@ const Cart = () => {
                 </div>
                 <div className="cart-summary">
                     <h3>Subtotal ({cart.reduce((a, c) => a + c.quantity, 0)} items):
-                        <span className="cart-total-price"> ${cartTotal.toFixed(2)}</span>
+                        <span className="cart-total-price"> ₹{cartTotal.toFixed(2)}</span>
                     </h3>
                     <Link to="/checkout" className="checkout-btn">Proceed to Checkout</Link>
                 </div>

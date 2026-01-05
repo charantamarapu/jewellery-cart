@@ -32,7 +32,7 @@ const SearchResults = () => {
                             <img src={product.image} alt={product.name} className="product-image" />
                             <h3>{product.name}</h3>
                             <p className="description">{product.description}</p>
-                            <p className="price">${product.price.toFixed(2)}</p>
+                            <p className="price">₹{product.price.toFixed(2)}</p>
                             <div className="product-actions">
                                 <Link to={`/product/${product.id}`} className="view-details-btn">View Details</Link>
                                 <button

@@ -10,6 +10,7 @@ import Register from './pages/Register';
 import Checkout from './pages/Checkout';
 import AdminDashboard from './pages/AdminDashboard';
 import SellerDashboard from './pages/SellerDashboard';
+import AccountSettings from './pages/AccountSettings';
 import SearchResults from './pages/SearchResults';
 import Footer from './components/Footer';
 
@@ -28,7 +29,8 @@ function App() {
                         <Route path="/register" element={<Register />} />
                         <Route path="/checkout" element={<Checkout />} />
                         <Route path="/admin" element={<AdminDashboard />} />
-                        <Route path="/seller" element={<SellerDashboard />} />
+                        <Route path="/seller-dashboard" element={<SellerDashboard />} />
+                        <Route path="/account-settings" element={<AccountSettings />} />
                         <Route path="/search" element={<SearchResults />} />
                     </Routes>
                 </main>

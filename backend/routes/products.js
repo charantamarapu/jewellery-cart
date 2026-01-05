@@ -11,6 +11,19 @@ router.get('/', async (req, res) => {
     res.json(db.data.products);
 });
 
+// Get seller's products - MUST be before /:id
+router.get('/seller/my-products', authenticateToken, isSellerOrAdmin, async (req, res) => {
+    const db = getDB();
+    await db.read();
+    
+    if (req.user.role === 'admin') {
+        res.json(db.data.products);
+    } else {
+        const sellerProducts = db.data.products.filter(p => p.sellerId === req.user.id);
+        res.json(sellerProducts);
+    }
+});
+
 // Get single product
 router.get('/:id', async (req, res) => {
     const db = getDB();
@@ -90,21 +103,6 @@ router.delete('/:id', authenticateToken, isSellerOrAdmin, async (req, res) => {
 
     db.data.products = db.data.products.filter(p => p.id !== id);
     await db.write();
-
-    res.json({ message: 'Product deleted' });
-});
-
-// Get seller's products
-router.get('/seller/my-products', authenticateToken, isSellerOrAdmin, async (req, res) => {
-    const db = getDB();
-    await db.read();
-    
-    if (req.user.role === 'admin') {
-        res.json(db.data.products);
-    } else {
-        const sellerProducts = db.data.products.filter(p => p.sellerId === req.user.id);
-        res.json(sellerProducts);
-    }
 
     res.json({ message: 'Product deleted' });
 });

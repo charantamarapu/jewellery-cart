@@ -12,9 +12,14 @@
       "name": "charan",
       "email": "charan@gmail.com",
       "password": "$2a$10$TRva4c/zqCmJzxY1fEyRX.WMKYff1L3xaWQuTqP5tours8BYRw.FS",
-      "role": "customer"
+      "role": "seller",
+      "roles": [
+        "customer",
+        "seller"
+      ]
     }
   ],
+  "addresses": [],
   "products": [
     {
       "id": 1,

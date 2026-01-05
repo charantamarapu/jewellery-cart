@@ -20,7 +20,7 @@ const SellerDashboard = () => {
     const [message, setMessage] = useState({ type: '', text: '' });
 
     useEffect(() => {
-        if (!user || (user.role !== 'seller' && user.role !== 'admin')) {
+        if (!user || (user.role !== 'seller' && user.role !== 'admin' && (!user.roles || !user.roles.includes('seller')))) {
             navigate('/login');
             return;
         }
@@ -154,7 +154,7 @@ const SellerDashboard = () => {
                                     <img src={product.image} alt={product.name} className="admin-product-thumb" />
                                     <div className="admin-product-info">
                                         <h4>{product.name}</h4>
-                                        <p>${product.price.toFixed(2)}</p>
+                                        <p>₹{product.price.toFixed(2)}</p>
                                     </div>
                                     <div className="product-actions-btns">
                                         <button onClick={() => handleEdit(product)} className="edit-btn">Edit</button>

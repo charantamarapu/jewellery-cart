@@ -98,8 +98,9 @@ const Navbar = () => {
                 {user ? (
                     <div className="navbar-user">
                         <span className="user-greeting">Hi, {user.name}</span>
+                        <Link to="/account-settings" className="settings-link">Settings</Link>
                         {user.role === 'admin' && <Link to="/admin" className="dashboard-link">Admin Dashboard</Link>}
-                        {user.role === 'seller' && <Link to="/seller" className="dashboard-link">Seller Dashboard</Link>}
+                        {(user.role === 'seller' || (user.roles && user.roles.includes('seller'))) && <Link to="/seller-dashboard" className="dashboard-link">Seller Dashboard</Link>}
                         <button onClick={logout} className="logout-btn">Sign Out</button>
                     </div>
                 ) : (

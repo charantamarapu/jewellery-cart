@@ -49,6 +49,27 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
+    const becomeSeller = async () => {
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch('/api/auth/become-seller', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.message);
+
+            localStorage.setItem('user', JSON.stringify(data.user));
+            setUser(data.user);
+            return { success: true, user: data.user };
+        } catch (error) {
+            return { success: false, message: error.message };
+        }
+    };
+
     const logout = () => {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
@@ -56,7 +77,7 @@ export const AuthProvider = ({ children }) => {
     };
 
     return (
-        <AuthContext.Provider value={{ user, login, register, logout, loading }}>
+        <AuthContext.Provider value={{ user, login, register, logout, becomeSeller, loading }}>
             {!loading && children}
         </AuthContext.Provider>
     );

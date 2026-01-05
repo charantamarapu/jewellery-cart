@@ -105,7 +105,7 @@ const AdminDashboard = () => {
                                 <img src={product.image} alt={product.name} className="admin-product-thumb" />
                                 <div className="admin-product-info">
                                     <h4>{product.name}</h4>
-                                    <p>${product.price.toFixed(2)}</p>
+                                    <p>₹{product.price.toFixed(2)}</p>
                                     {product.sellerId && <span className="seller-badge">Seller Product</span>}
                                 </div>
                                 <button onClick={() => handleDeleteProduct(product.id)} className="delete-btn">Delete</button>

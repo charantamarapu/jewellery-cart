@@ -19,8 +19,8 @@ const Login = () => {
             // Redirect based on role
             if (user.role === 'admin') {
                 navigate('/admin');
-            } else if (user.role === 'seller') {
-                navigate('/seller');
+            } else if (user.role === 'seller' || (user.roles && user.roles.includes('seller'))) {
+                navigate('/seller-dashboard');
             } else {
                 navigate('/');
             }

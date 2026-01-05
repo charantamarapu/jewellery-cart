@@ -137,6 +137,18 @@
     margin: 0 !important;
 }
 
+.settings-link {
+    font-size: 0.8rem;
+    color: #febd69 !important;
+}
+
+.settings-link:hover {
+    text-decoration: underline;
+    border: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
 .navbar-user {
     display: flex;
     flex-direction: column;

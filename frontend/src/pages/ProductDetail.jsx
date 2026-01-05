@@ -28,7 +28,7 @@ const ProductDetail = () => {
                 </div>
                 <div className="detail-info">
                     <h1>{product.name}</h1>
-                    <p className="detail-price">${product.price.toFixed(2)}</p>
+                    <p className="detail-price">₹{product.price.toFixed(2)}</p>
                     <p className="detail-description">{product.description}</p>
                     <button className="add-to-cart-lg" onClick={() => addToCart(product)}>Add to Cart</button>
                 </div>
