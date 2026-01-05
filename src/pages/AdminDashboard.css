@@ -4,17 +4,47 @@
     padding: 2rem 1rem;
 }
 
+.admin-page h2 {
+    font-size: 1.8rem;
+    margin-bottom: 1.5rem;
+    color: #0F1111;
+}
+
 .admin-content {
     display: grid;
     grid-template-columns: 400px 1fr;
     gap: 2rem;
 }
 
-.add-product-section,
+@media (max-width: 968px) {
+    .admin-content {
+        grid-template-columns: 1fr;
+    }
+}
+
 .product-list-section {
     background: white;
     padding: 1.5rem;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.product-list-section h3 {
+   d-product-section {
+    background: white;
+    padding: 1.5rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.add-product-section h3 {
+    font-size: 1.2rem;
+    margin-bottom: 1rem;
+    color: #0F1111;
+    color: #0F1111;
+}
+
+.admin-product-list {
+    max-height: 600px;
+    overflow-y: auto;
 }
 
 .admin-form .form-group {
@@ -31,9 +61,48 @@
 .admin-form input,
 .admin-form textarea {
     width: 100%;
-    padding: 0.5rem;
+    padding: 0.7rem;
     border: 1px solid #888;
-    border-radius: 3px;
+    border-radius: 4px;
+    font-size: 1rem;
+    transition: border-color 0.2s;
+    font-family: inherit;
+}
+
+.admin-form textarea {
+    min-height: 100px;
+    resize: vertical;
+}
+
+.admin-form input:focus,
+.admin-form textarea:focus {
+    outline: none;
+    border-color: #e77600;
+    box-shadow: 0 0 3px rgba(231, 118, 0, 0.2);
+}
+
+.admin-form button {
+    width: 100%;
+    padding: 0.8rem;
+    background-color: #D4AF37;
+    border: 1px solid #B4941F;
+    color: white;
+    font-weight: bold;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-top: 0.5rem;
+    transition: background-color 0.2s;
+}
+
+.admin-form button:hover {
+    background-color: #C5A059;
+}
+
+.admin-form button:disabled {
+    background-color: #ddd;
+    border-color: #ccc;
+    cursor: not-allowed;
+    opacity: 0.6;
 }
 
 .admin-product-item {
@@ -43,11 +112,19 @@
     border-bottom: 1px solid #eee;
 }
 
-.admin-product-thumb {
-    width: 60px;
-    height: 60px;
-    object-fit: contain;
-    margin-right: 1rem;
+.admin-product-info {
+    flex: 1;
+}
+
+.admin-product-info h4 {
+    font-size: 1rem;
+    margin-bottom: 0.3rem;
+    color: #0F1111;
+}
+
+.admin-product-info p {
+    font-weight: bold;
+    color: #B12704;
 }
 
 .delete-btn {
@@ -57,8 +134,12 @@
     border-radius: 4px;
     font-size: 0.8rem;
     cursor: pointer;
+    color: #111;
+    transition: all 0.2s;
 }
 
 .delete-btn:hover {
     background-color: #f7f8f8;
+    border-color: #d93025;
+    color: #d93025;
 }

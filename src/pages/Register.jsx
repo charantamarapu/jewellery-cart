@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import './Register.css';
 
 const Register = () => {
     const [formData, setFormData] = useState({
@@ -37,7 +38,7 @@ const Register = () => {
     return (
         <section className="register-page">
             <h2>Create Account</h2>
-            {error && <p className="error-message" style={{ color: 'red' }}>{error}</p>}
+            {error && <div className="error-message">{error}</div>}
             <form onSubmit={handleSubmit}>
                 <div className="form-group">
                     <label>Your Name</label>

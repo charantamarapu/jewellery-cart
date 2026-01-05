@@ -4,6 +4,7 @@ import './AdminDashboard.css';
 
 const AdminDashboard = () => {
     const { products, addProduct, deleteProduct } = useProducts();
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const [formData, setFormData] = useState({
         name: '',
         price: '',
@@ -15,15 +16,18 @@ const AdminDashboard = () => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
         if (!formData.name || !formData.price) return;
-        addProduct({
+        
+        setIsSubmitting(true);
+        await addProduct({
             ...formData,
             price: parseFloat(formData.price),
             image: formData.image || 'https://via.placeholder.com/150'
         });
         setFormData({ name: '', price: '', description: '', image: '' });
+        setIsSubmitting(false);
     };
 
     return (
@@ -50,7 +54,9 @@ const AdminDashboard = () => {
                             <label>Image URL</label>
                             <input type="text" name="image" value={formData.image} onChange={handleChange} placeholder="https://..." />
                         </div>
-                        <button type="submit">Add Product</button>
+                        <button type="submit" disabled={isSubmitting}>
+                            {isSubmitting ? 'Adding...' : 'Add Product'}
+                        </button>
                     </form>
                 </div>
 

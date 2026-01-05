@@ -3,6 +3,7 @@ import { useLocation, Link } from 'react-router-dom';
 import { useProducts } from '../context/ProductContext';
 import { useCart } from '../context/CartContext';
 import './ProductList.css'; // Reuse product list styles
+import './SearchResults.css';
 
 const SearchResults = () => {
     const { search } = useLocation();
@@ -20,10 +21,10 @@ const SearchResults = () => {
     }, [query, products]);
 
     return (
-        <section className="product-list-page">
+        <section className="product-list-page search-results-page">
             <h2>Search Results for "{query}"</h2>
             {filteredProducts.length === 0 ? (
-                <p>No products found matching your search.</p>
+                <p>No products found matching your search. Try different keywords.</p>
             ) : (
                 <div className="product-grid">
                     {filteredProducts.map((product) => (

@@ -8,6 +8,7 @@ const Checkout = () => {
     const { cart, cartTotal, clearCart } = useCart();
     const { user } = useAuth();
     const navigate = useNavigate();
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const [address, setAddress] = useState({
         fullName: '',
         addressLine1: '',
@@ -28,6 +29,8 @@ const Checkout = () => {
             return;
         }
 
+        setIsSubmitting(true);
+
         const orderData = {
             userId: user.id,
             items: cart,
@@ -47,11 +50,13 @@ const Checkout = () => {
                 clearCart();
                 navigate('/');
             } else {
-                alert('Failed to place order');
+                alert('Failed to place order. Please try again.');
             }
         } catch (error) {
             console.error('Order error:', error);
-            alert('Something went wrong');
+            alert('Something went wrong. Please try again.');
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -82,7 +87,9 @@ const Checkout = () => {
                             <label>Zip Code</label>
                             <input type="text" name="zip" value={address.zip} onChange={handleChange} required />
                         </div>
-                        <button type="submit" className="place-order-btn">Place Order (${cartTotal.toFixed(2)})</button>
+                        <button type="submit" className="place-order-btn" disabled={isSubmitting}>
+                            {isSubmitting ? 'Processing...' : `Place Order ($${cartTotal.toFixed(2)})`}
+                        </button>
                     </form>
                 </div>
                 <div className="order-summary-sidebar">

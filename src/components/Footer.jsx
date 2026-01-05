@@ -13,35 +13,35 @@ const Footer = () => {
                     <ul>
                         <li>Careers</li>
                         <li>Blog</li>
-                        <li>About Amazon</li>
+                        <li>About Luxe Gems</li>
                         <li>Investor Relations</li>
                     </ul>
                 </div>
                 <div className="footer-section">
                     <h3>Make Money with Us</h3>
                     <ul>
-                        <li>Sell products on Amazon</li>
-                        <li>Sell on Amazon Business</li>
-                        <li>Sell apps on Amazon</li>
+                        <li>Sell products on Luxe Gems</li>
+                        <li>Become a Partner</li>
+                        <li>Advertise Your Products</li>
                         <li>Become an Affiliate</li>
                     </ul>
                 </div>
                 <div className="footer-section">
-                    <h3>Amazon Payment Products</h3>
+                    <h3>Payment Options</h3>
                     <ul>
-                        <li>Amazon Business Card</li>
+                        <li>Credit & Debit Cards</li>
                         <li>Shop with Points</li>
-                        <li>Reload Your Balance</li>
-                        <li>Amazon Currency Converter</li>
+                        <li>Gift Cards</li>
+                        <li>Secure Checkout</li>
                     </ul>
                 </div>
                 <div className="footer-section">
                     <h3>Let Us Help You</h3>
                     <ul>
-                        <li>Amazon and COVID-19</li>
+                        <li>Customer Service</li>
                         <li>Your Account</li>
                         <li>Your Orders</li>
-                        <li>Shipping Rates & Policies</li>
+                        <li>Shipping & Returns</li>
                     </ul>
                 </div>
             </div>
