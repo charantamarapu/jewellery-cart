@@ -7,56 +7,59 @@ const router = express.Router();
 // Get all addresses for a user
 router.get('/', authenticateToken, async (req, res) => {
     const db = getDB();
-    await db.read();
-
-    const userAddresses = db.data.addresses.filter(addr => addr.userId === req.user.id);
-    res.json(userAddresses);
+    try {
+        const userAddresses = await db.all('SELECT * FROM addresses WHERE userId = ?', [req.user.id]);
+        res.json(userAddresses || []);
+    } catch (err) {
+        console.error('Get addresses error:', err);
+        res.status(500).json({ message: 'Error fetching addresses', error: err.message });
+    }
 });
 
 // Add new address
 router.post('/', authenticateToken, async (req, res) => {
     const { fullName, addressLine1, city, zip } = req.body;
     const db = getDB();
-    await db.read();
 
     if (!fullName || !addressLine1 || !city || !zip) {
         return res.status(400).json({ message: 'All fields are required' });
     }
 
-    const newAddress = {
-        id: Date.now(),
-        userId: req.user.id,
-        fullName,
-        addressLine1,
-        city,
-        zip,
-        createdAt: new Date().toISOString()
-    };
+    try {
+        const result = await db.run(
+            'INSERT INTO addresses (userId, fullName, addressLine1, city, zip) VALUES (?, ?, ?, ?, ?)',
+            [req.user.id, fullName, addressLine1, city, zip]
+        );
 
-    db.data.addresses.push(newAddress);
-    await db.write();
-
-    res.status(201).json(newAddress);
+        const newAddress = await db.get('SELECT * FROM addresses WHERE id = ?', [result.lastID]);
+        res.status(201).json(newAddress);
+    } catch (err) {
+        console.error('Add address error:', err);
+        res.status(500).json({ message: 'Error creating address', error: err.message });
+    }
 });
 
 // Delete address
 router.delete('/:id', authenticateToken, async (req, res) => {
     const db = getDB();
-    await db.read();
+    const id = req.params.id;
 
-    const address = db.data.addresses.find(addr => addr.id === parseInt(req.params.id));
-    if (!address) {
-        return res.status(404).json({ message: 'Address not found' });
+    try {
+        const address = await db.get('SELECT * FROM addresses WHERE id = ?', [id]);
+        if (!address) {
+            return res.status(404).json({ message: 'Address not found' });
+        }
+
+        if (address.userId !== req.user.id) {
+            return res.status(403).json({ message: 'Not authorized' });
+        }
+
+        await db.run('DELETE FROM addresses WHERE id = ?', [id]);
+        res.json({ message: 'Address deleted' });
+    } catch (err) {
+        console.error('Delete address error:', err);
+        res.status(500).json({ message: 'Error deleting address', error: err.message });
     }
-
-    if (address.userId !== req.user.id) {
-        return res.status(403).json({ message: 'Not authorized' });
-    }
-
-    db.data.addresses = db.data.addresses.filter(addr => addr.id !== parseInt(req.params.id));
-    await db.write();
-
-    res.json({ message: 'Address deleted' });
 });
 
 export default router;

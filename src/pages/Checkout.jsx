@@ -122,6 +122,9 @@ const Checkout = () => {
 
         try {
             const token = localStorage.getItem('token');
+            console.log('Order request - Token:', token ? 'Present' : 'Missing');
+            console.log('Order data:', orderData);
+            
             const response = await fetch('/api/orders', {
                 method: 'POST',
                 headers: { 
@@ -130,13 +133,16 @@ const Checkout = () => {
                 },
                 body: JSON.stringify(orderData)
             });
+            
+            console.log('Order response status:', response.status);
 
             if (response.ok) {
                 alert('Order placed successfully!');
                 clearCart();
                 navigate('/');
             } else {
-                alert('Failed to place order. Please try again.');
+                const errorData = await response.json();
+                alert(`Failed to place order: ${errorData.message || 'Please try again.'}`);
             }
         } catch (error) {
             console.error('Order error:', error);
