@@ -8,7 +8,8 @@ const Register = () => {
         name: '',
         email: '',
         password: '',
-        confirmPassword: ''
+        confirmPassword: '',
+        role: 'customer'
     });
     const [error, setError] = useState('');
     const { register } = useAuth();
@@ -27,7 +28,7 @@ const Register = () => {
             return;
         }
 
-        const result = await register(formData.name, formData.email, formData.password);
+        const result = await register(formData.name, formData.email, formData.password, formData.role);
         if (result.success) {
             navigate('/login');
         } else {
@@ -79,6 +80,18 @@ const Register = () => {
                         onChange={handleChange}
                         required
                     />
+                </div>
+                <div className="form-group">
+                    <label>Account Type</label>
+                    <select
+                        name="role"
+                        value={formData.role}
+                        onChange={handleChange}
+                        required
+                    >
+                        <option value="customer">Customer</option>
+                        <option value="seller">Seller</option>
+                    </select>
                 </div>
                 <button type="submit">Create Account</button>
             </form>

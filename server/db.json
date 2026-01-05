@@ -6,6 +6,13 @@
       "email": "test@test.com",
       "password": "$2a$10$AZb/Xrl54DUU4QACRd/wSeH.tJ2PT5E6Fk/7.kkVSD7X2zwmJt1Xq",
       "role": "admin"
+    },
+    {
+      "id": 1767600945234,
+      "name": "charan",
+      "email": "charan@gmail.com",
+      "password": "$2a$10$TRva4c/zqCmJzxY1fEyRX.WMKYff1L3xaWQuTqP5tours8BYRw.FS",
+      "role": "customer"
     }
   ],
   "products": [
@@ -19,49 +26,49 @@
     {
       "id": 2,
       "name": "White Gold Pearl Necklace",
-      "price": 549.50,
+      "price": 549.5,
       "image": "https://images.unsplash.com/photo-1599643478518-17488fbbcd75?auto=format&fit=crop&w=800&q=80",
       "description": "Classic white gold chain nestled with a lustrous freshwater pearl. A timeless piece for any collection."
     },
     {
       "id": 3,
       "name": "Sterling Silver Charm Bracelet",
-      "price": 120.00,
+      "price": 120,
       "image": "https://images.unsplash.com/photo-1611591437281-460bfbe1220a?auto=format&fit=crop&w=800&q=80",
       "description": "Handcrafted sterling silver bracelet with intricate charms. Customizable and dainty."
     },
     {
       "id": 4,
       "name": "Emerald & Diamond Earrings",
-      "price": 899.00,
+      "price": 899,
       "image": "https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?auto=format&fit=crop&w=800&q=80",
       "description": "Stunning emerald studs surrounded by a halo of conflict-free diamonds."
     },
     {
       "id": 5,
       "name": "Rose Gold Bangle",
-      "price": 350.00,
+      "price": 350,
       "image": "https://images.unsplash.com/photo-1602751584552-8ba43d4c3104?auto=format&fit=crop&w=800&q=80",
       "description": "Minimalist rose gold bangle with a polished finish. Ideal for stacking or wearing alone."
     },
     {
       "id": 6,
       "name": "Sapphire Pendant Necklace",
-      "price": 750.00,
+      "price": 750,
       "image": "https://images.unsplash.com/photo-1603974372039-adc49044b6bd?auto=format&fit=crop&w=800&q=80",
       "description": "Deep blue sapphire pendant set in platinum. A majestic addition to your evening wear."
     },
     {
       "id": 7,
       "name": "Vintage Ruby Ring",
-      "price": 2100.00,
+      "price": 2100,
       "image": "https://images.unsplash.com/photo-1605100804763-ebea23bee0a4?auto=format&fit=crop&w=800&q=80",
       "description": "Restored vintage ring featuring a central ruby stone with detailed filigree work."
     },
     {
       "id": 8,
       "name": "Crystal Choker",
-      "price": 85.00,
+      "price": 85,
       "image": "https://images.unsplash.com/photo-1599643477877-53135375f27e?auto=format&fit=crop&w=800&q=80",
       "description": "Modern crystal choker adds a touch of sparkle to any outfit. Adjustable length."
     }

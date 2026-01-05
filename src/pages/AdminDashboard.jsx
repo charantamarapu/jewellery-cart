@@ -1,16 +1,27 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useProducts } from '../context/ProductContext';
+import { useAuth } from '../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 import './AdminDashboard.css';
 
 const AdminDashboard = () => {
     const { products, addProduct, deleteProduct } = useProducts();
+    const { user } = useAuth();
+    const navigate = useNavigate();
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [message, setMessage] = useState({ type: '', text: '' });
     const [formData, setFormData] = useState({
         name: '',
         price: '',
         description: '',
         image: ''
     });
+
+    useEffect(() => {
+        if (!user || user.role !== 'admin') {
+            navigate('/login');
+        }
+    }, [user, navigate]);
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -21,18 +32,44 @@ const AdminDashboard = () => {
         if (!formData.name || !formData.price) return;
         
         setIsSubmitting(true);
-        await addProduct({
+        setMessage({ type: '', text: '' });
+        
+        const result = await addProduct({
             ...formData,
             price: parseFloat(formData.price),
             image: formData.image || 'https://via.placeholder.com/150'
         });
-        setFormData({ name: '', price: '', description: '', image: '' });
+        
+        if (result.success) {
+            setFormData({ name: '', price: '', description: '', image: '' });
+            setMessage({ type: 'success', text: 'Product added successfully!' });
+        } else {
+            setMessage({ type: 'error', text: result.message || 'Failed to add product' });
+        }
         setIsSubmitting(false);
+    };
+
+    const handleDeleteProduct = async (id) => {
+        if (!window.confirm('Are you sure you want to delete this product?')) return;
+        
+        const result = await deleteProduct(id);
+        if (result.success) {
+            setMessage({ type: 'success', text: 'Product deleted successfully!' });
+        } else {
+            setMessage({ type: 'error', text: result.message || 'Failed to delete product' });
+        }
     };
 
     return (
         <section className="admin-page">
             <h2>Admin Dashboard</h2>
+            <p className="welcome-text">Welcome, Admin! Manage all products here.</p>
+
+            {message.text && (
+                <div className={`message ${message.type}`}>
+                    {message.text}
+                </div>
+            )}
 
             <div className="admin-content">
                 <div className="add-product-section">
@@ -61,7 +98,7 @@ const AdminDashboard = () => {
                 </div>
 
                 <div className="product-list-section">
-                    <h3>Existing Products</h3>
+                    <h3>Existing Products ({products.length})</h3>
                     <div className="admin-product-list">
                         {products.map(product => (
                             <div key={product.id} className="admin-product-item">
@@ -69,8 +106,9 @@ const AdminDashboard = () => {
                                 <div className="admin-product-info">
                                     <h4>{product.name}</h4>
                                     <p>${product.price.toFixed(2)}</p>
+                                    {product.sellerId && <span className="seller-badge">Seller Product</span>}
                                 </div>
-                                <button onClick={() => deleteProduct(product.id)} className="delete-btn">Delete</button>
+                                <button onClick={() => handleDeleteProduct(product.id)} className="delete-btn">Delete</button>
                             </div>
                         ))}
                     </div>

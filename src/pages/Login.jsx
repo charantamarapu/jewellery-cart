@@ -15,7 +15,15 @@ const Login = () => {
         setError('');
         const result = await login(email, password);
         if (result.success) {
-            navigate('/');
+            const user = result.user;
+            // Redirect based on role
+            if (user.role === 'admin') {
+                navigate('/admin');
+            } else if (user.role === 'seller') {
+                navigate('/seller');
+            } else {
+                navigate('/');
+            }
         } else {
             setError(result.message);
         }

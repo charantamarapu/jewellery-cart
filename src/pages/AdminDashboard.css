@@ -6,8 +6,33 @@
 
 .admin-page h2 {
     font-size: 1.8rem;
-    margin-bottom: 1.5rem;
+    margin-bottom: 0.5rem;
     color: #0F1111;
+}
+
+.welcome-text {
+    color: #565959;
+    margin-bottom: 1.5rem;
+    font-size: 1rem;
+}
+
+.message {
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+    border-radius: 4px;
+    font-weight: 500;
+}
+
+.message.success {
+    background-color: #d4edda;
+    border: 1px solid #c3e6cb;
+    color: #155724;
+}
+
+.message.error {
+    background-color: #f8d7da;
+    border: 1px solid #f5c6cb;
+    color: #721c24;
 }
 
 .admin-content {
@@ -105,6 +130,28 @@
     opacity: 0.6;
 }
 
+.form-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.cancel-btn {
+    width: 100%;
+    padding: 0.8rem;
+    background-color: #f7f8f8;
+    border: 1px solid #d5d9d9;
+    color: #111;
+    font-weight: bold;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-top: 0.5rem;
+    transition: background-color 0.2s;
+}
+
+.cancel-btn:hover {
+    background-color: #e7e9ec;
+}
+
 .admin-product-item {
     display: flex;
     align-items: center;
@@ -125,6 +172,42 @@
 .admin-product-info p {
     font-weight: bold;
     color: #B12704;
+}
+
+.seller-badge {
+    display: inline-block;
+    background-color: #D4AF37;
+    color: white;
+    font-size: 0.7rem;
+    padding: 0.2rem 0.5rem;
+    border-radius: 3px;
+    margin-top: 0.3rem;
+}
+
+.product-actions-btns {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.edit-btn {
+    background-color: #007185;
+    border: 1px solid #007185;
+    padding: 0.4rem 0.8rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    color: white;
+    transition: all 0.2s;
+}
+
+.edit-btn:hover {
+    background-color: #005a6d;
+}
+
+.no-products {
+    padding: 2rem;
+    text-align: center;
+    color: #565959;
 }
 
 .delete-btn {

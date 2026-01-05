@@ -28,18 +28,18 @@ export const AuthProvider = ({ children }) => {
             localStorage.setItem('token', data.token);
             localStorage.setItem('user', JSON.stringify(data.user));
             setUser(data.user);
-            return { success: true };
+            return { success: true, user: data.user };
         } catch (error) {
             return { success: false, message: error.message };
         }
     };
 
-    const register = async (name, email, password) => {
+    const register = async (name, email, password, role = 'customer') => {
         try {
             const response = await fetch('/api/auth/register', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name, email, password }),
+                body: JSON.stringify({ name, email, password, role }),
             });
             const data = await response.json();
             if (!response.ok) throw new Error(data.message);

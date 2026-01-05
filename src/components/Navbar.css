@@ -120,6 +120,23 @@
     font-size: 0.8rem;
 }
 
+.logout-btn:hover {
+    text-decoration: underline;
+}
+
+.dashboard-link {
+    font-size: 0.8rem;
+    color: #D4AF37 !important;
+    font-weight: bold;
+}
+
+.dashboard-link:hover {
+    text-decoration: underline;
+    border: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
 .navbar-user {
     display: flex;
     flex-direction: column;

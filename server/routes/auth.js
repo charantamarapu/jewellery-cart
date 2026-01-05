@@ -6,9 +6,39 @@ import { getDB } from '../db.js';
 const router = express.Router();
 const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret';
 
+// Middleware to verify JWT token
+export const authenticateToken = (req, res, next) => {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+
+    if (!token) return res.status(401).json({ message: 'Access denied' });
+
+    jwt.verify(token, JWT_SECRET, (err, user) => {
+        if (err) return res.status(403).json({ message: 'Invalid token' });
+        req.user = user;
+        next();
+    });
+};
+
+// Middleware to check if user is admin
+export const isAdmin = (req, res, next) => {
+    if (req.user.role !== 'admin') {
+        return res.status(403).json({ message: 'Admin access required' });
+    }
+    next();
+};
+
+// Middleware to check if user is seller or admin
+export const isSellerOrAdmin = (req, res, next) => {
+    if (req.user.role !== 'seller' && req.user.role !== 'admin') {
+        return res.status(403).json({ message: 'Seller or Admin access required' });
+    }
+    next();
+};
+
 // Register
 router.post('/register', async (req, res) => {
-    const { name, email, password } = req.body;
+    const { name, email, password, role } = req.body;
     const db = getDB();
     await db.read();
 
@@ -16,7 +46,8 @@ router.post('/register', async (req, res) => {
     if (existingUser) return res.status(400).json({ message: 'User already exists' });
 
     const hashedPassword = await bcrypt.hash(password, 10);
-    const newUser = { id: Date.now(), name, email, password: hashedPassword, role: 'customer' };
+    const userRole = role || 'customer'; // Default to customer
+    const newUser = { id: Date.now(), name, email, password: hashedPassword, role: userRole };
 
     // Make first user admin for testing
     if (db.data.users.length === 0) newUser.role = 'admin';

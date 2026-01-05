@@ -98,12 +98,13 @@ const Navbar = () => {
                 {user ? (
                     <div className="navbar-user">
                         <span className="user-greeting">Hi, {user.name}</span>
+                        {user.role === 'admin' && <Link to="/admin" className="dashboard-link">Admin Dashboard</Link>}
+                        {user.role === 'seller' && <Link to="/seller" className="dashboard-link">Seller Dashboard</Link>}
                         <button onClick={logout} className="logout-btn">Sign Out</button>
                     </div>
                 ) : (
                     <Link to="/login">Sign In</Link>
                 )}
-                <Link to="/admin">Admin</Link>
             </div>
         </nav>
     );
