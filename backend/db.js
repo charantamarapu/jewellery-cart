@@ -77,9 +77,6 @@ export const setupDB = async () => {
                         CREATE TABLE IF NOT EXISTS products (
                             id INTEGER PRIMARY KEY AUTOINCREMENT,
                             name TEXT NOT NULL,
-                            price REAL NOT NULL,
-                            image BLOB,
-                            imageType TEXT,
                             imageUrl TEXT,
                             images TEXT DEFAULT '[]',
                             description TEXT,
@@ -253,6 +250,45 @@ export const setupDB = async () => {
                         }
                     }
 
+                    // Remove image BLOB and imageType columns from products (migration to URL-only images)
+                    try {
+                        const productInfo = await dbAll("PRAGMA table_info(products)");
+                        const hasImage = productInfo.some(col => col.name === 'image');
+                        const hasImageType = productInfo.some(col => col.name === 'imageType');
+                        
+                        if (hasImage || hasImageType) {
+                            console.log('⏳ Migrating to URL-only images - removing image BLOB and imageType columns...');
+                            // Recreate table without image BLOB and imageType columns
+                            await dbExec(`
+                                BEGIN TRANSACTION;
+                                CREATE TABLE products_new (
+                                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                                    name TEXT NOT NULL,
+                                    imageUrl TEXT,
+                                    images TEXT DEFAULT '[]',
+                                    description TEXT,
+                                    stock INTEGER DEFAULT 0,
+                                    categoryId INTEGER,
+                                    sellerId INTEGER,
+                                    createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+                                    FOREIGN KEY (sellerId) REFERENCES users(id),
+                                    FOREIGN KEY (categoryId) REFERENCES categories(id)
+                                );
+                                INSERT INTO products_new 
+                                SELECT id, name, imageUrl, images, description, stock, categoryId, sellerId, createdAt 
+                                FROM products;
+                                DROP TABLE products;
+                                ALTER TABLE products_new RENAME TO products;
+                                COMMIT;
+                            `);
+                            console.log('✅ Successfully migrated to URL-only images - image BLOB and imageType columns removed');
+                        }
+                    } catch (err) {
+                        if (!err.message.includes('no such column')) {
+                            console.warn('⚠️  Image migration warning:', err.message);
+                        }
+                    }
+
                     // Add imageUrl column to products if it doesn't exist
                     try {
                         await dbExec("ALTER TABLE products ADD COLUMN imageUrl TEXT");
@@ -260,6 +296,43 @@ export const setupDB = async () => {
                     } catch (err) {
                         if (!err.message.includes('duplicate column')) {
                             console.warn('⚠️  ImageUrl migration warning:', err.message);
+                        }
+                    }
+
+                    // Remove price column from products if it exists (migration to dynamic pricing)
+                    try {
+                        const productInfo = await dbAll("PRAGMA table_info(products)");
+                        const hasPrice = productInfo.some(col => col.name === 'price');
+                        
+                        if (hasPrice) {
+                            console.log('⏳ Migrating to dynamic pricing - removing price column...');
+                            await dbExec(`
+                                BEGIN TRANSACTION;
+                                CREATE TABLE products_new (
+                                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                                    name TEXT NOT NULL,
+                                    imageUrl TEXT,
+                                    images TEXT DEFAULT '[]',
+                                    description TEXT,
+                                    stock INTEGER DEFAULT 0,
+                                    categoryId INTEGER,
+                                    sellerId INTEGER,
+                                    createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+                                    FOREIGN KEY (sellerId) REFERENCES users(id),
+                                    FOREIGN KEY (categoryId) REFERENCES categories(id)
+                                );
+                                INSERT INTO products_new 
+                                SELECT id, name, imageUrl, images, description, stock, categoryId, sellerId, createdAt 
+                                FROM products;
+                                DROP TABLE products;
+                                ALTER TABLE products_new RENAME TO products;
+                                COMMIT;
+                            `);
+                            console.log('✅ Successfully migrated to dynamic pricing - price column removed');
+                        }
+                    } catch (err) {
+                        if (!err.message.includes('no such column')) {
+                            console.warn('⚠️  Dynamic pricing migration warning:', err.message);
                         }
                     }
 

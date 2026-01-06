@@ -519,3 +519,113 @@ button.ghost.danger:hover {
 .delete-product-btn:hover {
     background: #ffcdd2;
 }
+
+/* Metal Prices Section */
+.metal-prices-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin-top: 1.5rem;
+}
+
+.metal-price-item {
+    background: linear-gradient(135deg, rgba(212, 175, 55, 0.1) 0%, rgba(26, 26, 46, 0.02) 100%);
+    border: 2px solid rgba(212, 175, 55, 0.2);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+    transition: all var(--transition-smooth);
+}
+
+.metal-price-item:hover {
+    border-color: rgba(212, 175, 55, 0.4);
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+}
+
+.metal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.metal-name {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.metal-header .edit-btn,
+.metal-edit-actions .save-btn,
+.metal-edit-actions .cancel-btn {
+    padding: 0.4rem 0.8rem;
+    border: none;
+    border-radius: var(--radius-md);
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    font-weight: 600;
+}
+
+.metal-header .edit-btn {
+    background: var(--primary);
+    color: white;
+}
+
+.metal-header .edit-btn:hover {
+    background: var(--primary-dark);
+}
+
+.metal-edit-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.metal-edit-actions .save-btn {
+    background: #4caf50;
+    color: white;
+}
+
+.metal-edit-actions .save-btn:hover {
+    background: #45a049;
+}
+
+.metal-edit-actions .cancel-btn {
+    background: #f44336;
+    color: white;
+}
+
+.metal-edit-actions .cancel-btn:hover {
+    background: #da190b;
+}
+
+.metal-price {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--primary);
+    margin: 0.5rem 0;
+}
+
+.metal-price-input {
+    width: 100%;
+    padding: 0.75rem;
+    border: 2px solid var(--primary);
+    border-radius: var(--radius-md);
+    font-size: 1rem;
+    font-weight: 600;
+    margin: 0.5rem 0;
+    box-sizing: border-box;
+}
+
+.metal-price-input:focus {
+    outline: none;
+    border-color: var(--primary-dark);
+    box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1);
+}
+
+.metal-updated {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    margin: 0.5rem 0 0;
+}

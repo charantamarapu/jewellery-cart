@@ -61,7 +61,7 @@ const Cart = () => {
                                 <img src={getProductImageSrc(item)} alt={item.name} className="cart-item-image" />
                                 <div className="cart-item-info">
                                     <h3>{item.name}</h3>
-                                    <p className="cart-item-price">₹{item.price.toFixed(2)}</p>
+                                    <p className="cart-item-price">₹{(item.price || 0).toFixed(2)}</p>
 
                                     {isOutOfStock ? (
                                         <span className="stock-warning">⚠️ Out of Stock</span>

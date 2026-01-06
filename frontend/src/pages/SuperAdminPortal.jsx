@@ -3,7 +3,9 @@ import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { useProducts } from '../context/ProductContext';
 import { getProductImageSrc } from '../utils/imageUtils';
+import { calculateProductPrices } from '../utils/priceUtils';
 import ProductForm from '../components/ProductForm';
+import ProductImportExport from '../components/ProductImportExport';
 import './SuperAdminPortal.css';
 
 const statusOptions = ['pending', 'processing', 'shipped', 'delivered', 'cancelled'];
@@ -16,8 +18,12 @@ const SuperAdminPortal = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [overview, setOverview] = useState(null);
+    const [productPrices, setProductPrices] = useState({});
     const [users, setUsers] = useState([]);
     const [orders, setOrders] = useState([]);
+    const [metalPrices, setMetalPrices] = useState([]);
+    const [editingMetalPrice, setEditingMetalPrice] = useState(null);
+    const [editingMetalValue, setEditingMetalValue] = useState('');
     const [savingUserId, setSavingUserId] = useState(null);
     const [savingOrderId, setSavingOrderId] = useState(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -42,29 +48,41 @@ const SuperAdminPortal = () => {
         bootstrap();
     }, [user]);
 
+    // Fetch prices when products change
+    useEffect(() => {
+        if (products && products.length > 0) {
+            const productIds = products.map(p => p.id);
+            calculateProductPrices(productIds).then(setProductPrices);
+        }
+    }, [products]);
+
     const bootstrap = async () => {
         setLoading(true);
         setError('');
         try {
-            const [overviewRes, usersRes, ordersRes] = await Promise.all([
+            const [overviewRes, usersRes, ordersRes, metalPricesRes] = await Promise.all([
                 fetch('/api/admin/overview', { headers }),
                 fetch('/api/admin/users', { headers }),
-                fetch('/api/admin/orders', { headers })
+                fetch('/api/admin/orders', { headers }),
+                fetch('/api/admin/metal-prices', { headers })
             ]);
 
             if (!overviewRes.ok) throw new Error('Failed to load overview');
             if (!usersRes.ok) throw new Error('Failed to load users');
             if (!ordersRes.ok) throw new Error('Failed to load orders');
+            if (!metalPricesRes.ok) throw new Error('Failed to load metal prices');
 
-            const [overviewData, usersData, ordersData] = await Promise.all([
+            const [overviewData, usersData, ordersData, metalPricesData] = await Promise.all([
                 overviewRes.json(),
                 usersRes.json(),
-                ordersRes.json()
+                ordersRes.json(),
+                metalPricesRes.json()
             ]);
 
             setOverview(overviewData);
             setUsers(usersData);
             setOrders(ordersData);
+            setMetalPrices(metalPricesData.prices || []);
         } catch (err) {
             setError(err.message);
         } finally {
@@ -137,6 +155,38 @@ const SuperAdminPortal = () => {
         }
     };
 
+    // Handle metal price update
+    const handleUpdateMetalPrice = async (metalId, metal, newPrice) => {
+        if (!newPrice || newPrice <= 0) {
+            setMessage({ type: 'error', text: 'Price must be greater than 0' });
+            return;
+        }
+
+        setEditingMetalPrice(null);
+        setError('');
+        try {
+            const res = await fetch(`/api/admin/metal-prices/${metal}`, {
+                method: 'PUT',
+                headers,
+                body: JSON.stringify({ pricePerGram: parseFloat(newPrice) })
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.message || 'Failed to update metal price');
+            
+            // Update local state
+            setMetalPrices(prev => prev.map(m => m.id === metalId ? data.price : m));
+            setMessage({ type: 'success', text: `${metal.toUpperCase()} price updated successfully!` });
+        } catch (err) {
+            setError(err.message);
+            setMessage({ type: 'error', text: err.message });
+        }
+    };
+
+    const handleEditMetalPrice = (metal, currentPrice) => {
+        setEditingMetalPrice(metal.id);
+        setEditingMetalValue(currentPrice.toString());
+    };
+
     // Fetch product + inventory data for editing
     const handleEditClick = async (product) => {
         try {
@@ -194,6 +244,7 @@ const SuperAdminPortal = () => {
                     description: productData.description,
                     price: productData.price,
                     image: productData.image,
+                    imageUrl: productData.imageUrl,
                     stock: productData.stock
                 });
 
@@ -240,7 +291,8 @@ const SuperAdminPortal = () => {
                     name: productData.name,
                     description: productData.description,
                     price: productData.price,
-                    image: productData.image || 'https://via.placeholder.com/150',
+                    image: productData.image,
+                    imageUrl: productData.imageUrl,
                     stock: productData.stock
                 });
 
@@ -381,6 +433,67 @@ const SuperAdminPortal = () => {
                 </div>
             )}
 
+            {/* Metal Prices Section */}
+            <div className="card">
+                <div className="section-header">
+                    <div>
+                        <p className="eyebrow">Pricing Control</p>
+                        <h3>💰 Metal Prices (per gram)</h3>
+                    </div>
+                    <button className="ghost" onClick={() => { setEditingMetalPrice(null); bootstrap(); }}>Refresh</button>
+                </div>
+                <div className="metal-prices-grid">
+                    {metalPrices.length > 0 ? (
+                        metalPrices.map(metal => (
+                            <div key={metal.id} className="metal-price-item">
+                                <div className="metal-header">
+                                    <h4 className="metal-name">{metal.metal.charAt(0).toUpperCase() + metal.metal.slice(1)}</h4>
+                                    {editingMetalPrice === metal.id ? (
+                                        <div className="metal-edit-actions">
+                                            <button
+                                                className="save-btn"
+                                                onClick={() => handleUpdateMetalPrice(metal.id, metal.metal, editingMetalValue)}
+                                            >
+                                                ✓ Save
+                                            </button>
+                                            <button
+                                                className="cancel-btn"
+                                                onClick={() => setEditingMetalPrice(null)}
+                                            >
+                                                ✗ Cancel
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <button
+                                            className="edit-btn"
+                                            onClick={() => handleEditMetalPrice(metal, metal.pricePerGram)}
+                                        >
+                                            ✏️ Edit
+                                        </button>
+                                    )}
+                                </div>
+                                {editingMetalPrice === metal.id ? (
+                                    <input
+                                        type="number"
+                                        value={editingMetalValue}
+                                        onChange={(e) => setEditingMetalValue(e.target.value)}
+                                        className="metal-price-input"
+                                        placeholder="Enter price"
+                                        min="0"
+                                        step="0.01"
+                                    />
+                                ) : (
+                                    <p className="metal-price">₹{parseFloat(metal.pricePerGram).toFixed(2)}</p>
+                                )}
+                                <p className="metal-updated">Updated: {new Date(metal.updatedAt).toLocaleString()}</p>
+                            </div>
+                        ))
+                    ) : (
+                        <p className="muted">No metal prices found</p>
+                    )}
+                </div>
+            </div>
+
             <div className="grid two">
                 <div className="card">
                     <div className="section-header">
@@ -509,6 +622,9 @@ const SuperAdminPortal = () => {
                     </div>
                 )}
 
+                {/* Import/Export Section */}
+                <ProductImportExport onImportSuccess={() => window.location.reload()} />
+
                 <div className="products-list">
                     {products.length === 0 ? (
                         <p className="no-products">No products yet.</p>
@@ -521,7 +637,7 @@ const SuperAdminPortal = () => {
                                     </div>
                                     <div className="product-details">
                                         <h4>{product.name}</h4>
-                                        <p className="product-price">₹{product.price.toFixed(2)}</p>
+                                        <p className="product-price">₹{(productPrices[product.id] || 0).toFixed(2)}</p>
                                         <p className="product-description">{product.description?.substring(0, 100) || 'No description'}...</p>
                                         {product.sellerId && (
                                             <span className="seller-badge">👤 Seller Product</span>

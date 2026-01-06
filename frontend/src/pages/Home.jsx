@@ -1,12 +1,15 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useProducts } from '../context/ProductContext';
 import { Link } from 'react-router-dom';
 import { getProductImageSrc } from '../utils/imageUtils';
+import { calculateProductPrices } from '../utils/priceUtils';
 import './Home.css';
 
 const Home = () => {
   const { products } = useProducts();
   const featuredProducts = Array.isArray(products) ? products.slice(0, 4) : [];
+
+
 
   return (
     <section className="home-section">
@@ -29,7 +32,7 @@ const Home = () => {
               <div key={product.id} className="product-card">
                 <img src={getProductImageSrc(product)} alt={product.name} className="product-image" />
                 <h3>{product.name}</h3>
-                <p className="price">₹{product.price.toFixed(2)}</p>
+                <p className="price">₹{(product.price || 0).toFixed(2)}</p>
                 <p className="stock">📦 Stock: {product.stock || 0}</p>
                 <Link to={`/product/${product.id}`} className="view-details-btn">View Details</Link>
               </div>

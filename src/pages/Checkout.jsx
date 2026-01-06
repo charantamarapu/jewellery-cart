@@ -238,7 +238,7 @@ const Checkout = () => {
 
                     <form onSubmit={handleSubmit} style={{ marginTop: '2rem' }}>
                         <button type="submit" className="place-order-btn" disabled={isSubmitting || (!selectedAddressId && !showAddForm)}>
-                            {isSubmitting ? 'Processing...' : `Place Order (₹${cartTotal.toFixed(2)})`}
+                            {isSubmitting ? 'Processing...' : `Place Order (₹${(cartTotal || 0).toFixed(2)})`}
                         </button>
                     </form>
                 </div>
@@ -247,11 +247,11 @@ const Checkout = () => {
                     {cart.map(item => (
                         <div key={item.id} className="summary-item">
                             <span>{item.name} x {item.quantity}</span>
-                            <span>₹{(item.price * item.quantity).toFixed(2)}</span>
+                            <span>₹{((item.price || 0) * item.quantity).toFixed(2)}</span>
                         </div>
                     ))}
                     <div className="summary-total">
-                        <strong>Total: ₹{cartTotal.toFixed(2)}</strong>
+                        <strong>Total: ₹{(cartTotal || 0).toFixed(2)}</strong>
                     </div>
                 </div>
             </div>

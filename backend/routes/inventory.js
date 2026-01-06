@@ -83,8 +83,8 @@ router.post('/add', authenticateToken, isSellerOrAdmin, async (req, res) => {
                 customOrnament || null,
                 wastagePercent,
                 makingChargePerGram,
-                totalMakingCharge,
-                totalPrice,
+                totalMakingCharge || 0, // Not required, will be calculated dynamically
+                totalPrice || 0, // Not required, will be calculated dynamically
                 image || null
             ]
         );
@@ -113,7 +113,37 @@ router.get('/product/:productId', async (req, res) => {
             return res.json({ success: true, item: null });
         }
 
-        res.json({ success: true, item });
+        // Fetch current metal prices from metal_prices table
+        const metalPrices = await db.all('SELECT metal, pricePerGram FROM metal_prices');
+        const metalPricesMap = metalPrices.reduce((acc, curr) => {
+            acc[curr.metal.toLowerCase()] = curr.pricePerGram;
+            return acc;
+        }, {});
+
+        // Get current metal price for this item
+        const metalKey = item.metal ? item.metal.toLowerCase() : '';
+        const currentMetalPrice = metalPricesMap[metalKey] || item.metalPrice || 0;
+
+        // Calculate total price using current metal price
+        const purity = parseFloat(item.purity) || 0;
+        const netWeight = parseFloat(item.netWeight) || 0;
+        const wastagePercent = parseFloat(item.wastagePercent) || 0;
+        const makingChargePerGram = parseFloat(item.makingChargePerGram) || 0;
+        const extraValue = parseFloat(item.extraValue) || 0;
+
+        const metalValue = (purity / 100) * netWeight * currentMetalPrice;
+        const wastageAmount = metalValue * (wastagePercent / 100);
+        const totalMakingCharge = netWeight * makingChargePerGram;
+        const totalPrice = metalValue + wastageAmount + totalMakingCharge + extraValue;
+
+        // Return item with updated metal price and calculated total price
+        const itemWithUpdatedPrice = {
+            ...item,
+            metalPrice: currentMetalPrice,
+            totalPrice: Math.round(totalPrice * 100) / 100
+        };
+
+        res.json({ success: true, item: itemWithUpdatedPrice });
     } catch (err) {
         res.status(500).json({ success: false, message: err.message });
     }
@@ -227,8 +257,6 @@ router.put('/:id', authenticateToken, isSellerOrAdmin, async (req, res) => {
             customOrnament,
             wastagePercent,
             makingChargePerGram,
-            totalMakingCharge,
-            totalPrice,
             image
         } = req.body;
 
@@ -237,13 +265,13 @@ router.put('/:id', authenticateToken, isSellerOrAdmin, async (req, res) => {
                 metal = ?, metalPrice = ?, hallmarked = ?, purity = ?, netWeight = ?,
                 extraDescription = ?, extraWeight = ?, extraValue = ?, grossWeight = ?,
                 type = ?, ornament = ?, customOrnament = ?, wastagePercent = ?,
-                makingChargePerGram = ?, totalMakingCharge = ?, totalPrice = ?, image = ?, updatedAt = CURRENT_TIMESTAMP
+                makingChargePerGram = ?, image = ?, updatedAt = CURRENT_TIMESTAMP
             WHERE id = ?`,
             [
                 metal, metalPrice, hallmarked ? 1 : 0, purity, netWeight,
                 extraDescription, extraWeight || 0, extraValue || 0, grossWeight,
                 type, ornament, customOrnament, wastagePercent,
-                makingChargePerGram, totalMakingCharge, totalPrice, image || null, req.params.id
+                makingChargePerGram, image || null, req.params.id
             ]
         );
 

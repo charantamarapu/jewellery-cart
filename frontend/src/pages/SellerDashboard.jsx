@@ -3,6 +3,9 @@ import { useProducts } from '../context/ProductContext';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import ProductForm from '../components/ProductForm';
+import ProductImportExport from '../components/ProductImportExport';
+import { getProductImageSrc } from '../utils/imageUtils';
+import { calculateProductPrices } from '../utils/priceUtils';
 import './AdminDashboard.css';
 
 const SellerDashboard = () => {
@@ -10,6 +13,7 @@ const SellerDashboard = () => {
     const { user } = useAuth();
     const navigate = useNavigate();
     const [sellerProducts, setSellerProducts] = useState([]);
+    const [productPrices, setProductPrices] = useState({});
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [message, setMessage] = useState({ type: '', text: '' });
     const [showProductForm, setShowProductForm] = useState(false);
@@ -27,6 +31,13 @@ const SellerDashboard = () => {
     const loadProducts = async () => {
         const products = await fetchSellerProducts();
         setSellerProducts(products);
+        
+        // Fetch prices for all products
+        if (products && products.length > 0) {
+            const productIds = products.map(p => p.id);
+            const prices = await calculateProductPrices(productIds);
+            setProductPrices(prices);
+        }
     };
 
     // Fetch product + inventory data for editing
@@ -86,6 +97,7 @@ const SellerDashboard = () => {
                     description: productData.description,
                     price: productData.price,
                     image: productData.image,
+                    imageUrl: productData.imageUrl,
                     stock: productData.stock
                 });
 
@@ -132,7 +144,8 @@ const SellerDashboard = () => {
                     name: productData.name,
                     description: productData.description,
                     price: productData.price,
-                    image: productData.image || 'https://via.placeholder.com/150',
+                    image: productData.image,
+                    imageUrl: productData.imageUrl,
                     stock: productData.stock
                 });
 
@@ -267,6 +280,9 @@ const SellerDashboard = () => {
                         </div>
                     )}
 
+                    {/* Import/Export Section */}
+                    <ProductImportExport onImportSuccess={loadProducts} />
+
                     <div className="products-list">
                         {sellerProducts.length === 0 ? (
                             <p className="no-products">No products yet. Create your first jewelry product!</p>
@@ -275,11 +291,11 @@ const SellerDashboard = () => {
                                 {sellerProducts.map(product => (
                                     <div key={product.id} className="product-card">
                                         <div className="product-image">
-                                            <img src={product.image} alt={product.name} />
+                                            <img src={getProductImageSrc(product)} alt={product.name} />
                                         </div>
                                         <div className="product-details">
                                             <h4>{product.name}</h4>
-                                            <p className="product-price">₹{product.price.toFixed(2)}</p>
+                                            <p className="product-price">₹{(productPrices[product.id] || 0).toFixed(2)}</p>
                                             <p className="product-description">{product.description?.substring(0, 100) || 'No description'}...</p>
                                             <div className="stock-info">
                                                 <span className="stock-badge">📦 Stock: {product.stock || 0}</span>

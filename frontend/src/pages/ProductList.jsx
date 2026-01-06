@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useCart } from '../context/CartContext';
 import { Link } from 'react-router-dom';
 import { getProductImageSrc } from '../utils/imageUtils';
+import { calculateProductPrices } from '../utils/priceUtils';
 import CategoryFilter from '../components/CategoryFilter';
 import ProductFilters from '../components/ProductFilters';
 import Pagination from '../components/Pagination';
@@ -143,7 +144,7 @@ const ProductList = () => {
                                             )}
                                             <p className="description">{product.description}</p>
                                             <div className="product-footer">
-                                                <p className="price">₹{product.price.toFixed(2)}</p>
+                                                <p className="price">₹{(product.price || 0).toFixed(2)}</p>
                                                 {getStockBadge(product.stock)}
                                             </div>
                                             <div className="product-actions">

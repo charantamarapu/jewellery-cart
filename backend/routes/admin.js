@@ -93,8 +93,8 @@ router.patch('/users/:id/role', async (req, res) => {
 
         await db.run('UPDATE users SET role = ?, roles = ? WHERE id = ?', [primaryRole, JSON.stringify(nextRoles), userId]);
         const updatedUser = await db.get('SELECT id, name, email, role, roles, createdAt FROM users WHERE id = ?', [userId]);
-        res.json({ 
-            ...updatedUser, 
+        res.json({
+            ...updatedUser,
             roles: parseRoles(updatedUser),
             requiresRelogin: true
         });
@@ -217,4 +217,65 @@ router.get('/inventory', async (req, res) => {
     }
 });
 
+// Get all metal prices (superadmin only)
+router.get('/metal-prices', async (req, res) => {
+    const db = getDB();
+    try {
+        const prices = await db.all('SELECT * FROM metal_prices ORDER BY metal ASC');
+        res.json({ success: true, prices });
+    } catch (err) {
+        console.error('Get metal prices error:', err);
+        res.status(500).json({ success: false, message: 'Failed to load metal prices', error: err.message });
+    }
+});
+
+// Update metal price (superadmin only)
+router.put('/metal-prices/:metal', async (req, res) => {
+    const db = getDB();
+    const { metal } = req.params;
+    const { pricePerGram } = req.body;
+
+    if (!pricePerGram || pricePerGram <= 0) {
+        return res.status(400).json({ success: false, message: 'Valid price per gram is required' });
+    }
+
+    try {
+        // Get old price for audit log
+        const oldPrice = await db.get('SELECT pricePerGram FROM metal_prices WHERE metal = ?', [metal]);
+
+        if (!oldPrice) {
+            return res.status(404).json({ success: false, message: 'Metal not found' });
+        }
+
+        // Update the price
+        await db.run(
+            'UPDATE metal_prices SET pricePerGram = ?, updatedAt = CURRENT_TIMESTAMP, updatedBy = ? WHERE metal = ?',
+            [pricePerGram, req.user.id, metal]
+        );
+
+        // Log the action
+        await db.run(
+            'INSERT INTO audit_logs (adminId, action, targetType, targetId, details) VALUES (?, ?, ?, ?, ?)',
+            [
+                req.user.id,
+                'UPDATE_METAL_PRICE',
+                'metal_price',
+                null,
+                JSON.stringify({
+                    metal,
+                    from: oldPrice.pricePerGram,
+                    to: pricePerGram
+                })
+            ]
+        );
+
+        const updated = await db.get('SELECT * FROM metal_prices WHERE metal = ?', [metal]);
+        res.json({ success: true, message: 'Metal price updated successfully', price: updated });
+    } catch (err) {
+        console.error('Update metal price error:', err);
+        res.status(500).json({ success: false, message: 'Failed to update metal price', error: err.message });
+    }
+});
+
 export default router;
+

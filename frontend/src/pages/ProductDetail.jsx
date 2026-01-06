@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { useProducts } from '../context/ProductContext';
 import { useCart } from '../context/CartContext';
 import { useToast } from '../context/ToastContext';
+import { getImageUrl } from '../utils/imageProxy.js';
 import './ProductDetail.css';
 
 const ProductDetail = () => {
@@ -74,13 +75,25 @@ const ProductDetail = () => {
     const cartItem = cart.find(item => item.id === parseInt(id));
     const currentQtyInCart = cartItem ? cartItem.quantity : 0;
 
-    // Parse images array
+    // Parse images array and proxy Google Drive URLs
     const images = product ? (() => {
         try {
             const parsed = typeof product.images === 'string' ? JSON.parse(product.images) : product.images;
-            return Array.isArray(parsed) && parsed.length > 0 ? parsed : [product.image];
+            const imageList = (Array.isArray(parsed) && parsed.length > 0 ? parsed : [product.imageUrl]).filter(Boolean);
+
+            // Apply proxy to Google Drive URLs
+            return imageList.map(img => {
+                if (img && img.includes('drive.google.com')) {
+                    return getImageUrl(img);
+                }
+                return img;
+            });
         } catch {
-            return [product.image];
+            const fallbackImage = product.imageUrl;
+            if (fallbackImage && fallbackImage.includes('drive.google.com')) {
+                return [getImageUrl(fallbackImage)];
+            }
+            return [fallbackImage];
         }
     })() : [];
 
@@ -177,7 +190,7 @@ const ProductDetail = () => {
                 </div>
                 <div className="detail-info">
                     <h1>{product.name}</h1>
-                    <p className="detail-price">₹{product.price.toFixed(2)}</p>
+                    <p className="detail-price">₹{(product.price || inventory?.totalPrice || 0).toFixed(2)}</p>
 
                     <span className={`stock-badge ${stockStatus.className}`}>
                         {stockStatus.label}
@@ -212,7 +225,11 @@ const ProductDetail = () => {
                     <h2>💎 Jewelry Specifications</h2>
                     {inventory.image && (
                         <div className="spec-image-container">
-                            <img src={inventory.image} alt="Certificate/Specification" className="spec-image" />
+                            <img
+                                src={inventory.image && inventory.image.includes('drive.google.com') ? getImageUrl(inventory.image) : inventory.image}
+                                alt="Certificate/Specification"
+                                className="spec-image"
+                            />
                         </div>
                     )}
                     <div className="specs-grid">
@@ -285,7 +302,7 @@ const ProductDetail = () => {
                             )}
                             <div className="spec-item total">
                                 <span className="spec-label">Total Price</span>
-                                <span className="spec-value">₹{inventory.totalPrice?.toFixed(2) || product.price.toFixed(2)}</span>
+                                <span className="spec-value">₹{(product.price || inventory.totalPrice || 0).toFixed(2)}</span>
                             </div>
                         </div>
                     </div>

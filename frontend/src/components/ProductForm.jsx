@@ -1,9 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import './ProductForm.css';
+import { getImageUrl } from '../utils/imageProxy.js';
+
+// Convert Google Drive share link to direct image URL and proxy it
+const getProxiedImageUrl = (url) => {
+    return getImageUrl(url);
+};
 
 const ProductForm = ({ onSubmit, initialData = null, isLoading = false, onCancel = null }) => {
     const [metalPrices, setMetalPrices] = useState({});
     const [expandedSection, setExpandedSection] = useState('basic'); // 'basic' or 'jewelry'
+    const [imageLoadError, setImageLoadError] = useState(false);
+    const [inventoryImageLoadError, setInventoryImageLoadError] = useState(false);
 
     const [formData, setFormData] = useState({
         // Basic product info
@@ -295,7 +303,7 @@ const ProductForm = ({ onSubmit, initialData = null, isLoading = false, onCancel
         let imageType = null;
         let imageUrl = null;
 
-        // Use image URL
+        // Store original image URL (not proxied) - will be proxied when displayed
         if (formData.image) {
             imageUrl = formData.image;
         }
@@ -386,15 +394,56 @@ const ProductForm = ({ onSubmit, initialData = null, isLoading = false, onCancel
                                     type="text"
                                     name="image"
                                     value={formData.image}
-                                    onChange={handleChange}
-                                    placeholder="https://example.com/image.jpg or Google Drive shareable link"
+                                    onChange={(e) => {
+                                        handleChange(e);
+                                        setImageLoadError(false);
+                                    }}
+                                    placeholder="https://example.com/image.jpg or paste Google Drive share link"
                                 />
+                                <small style={{ color: '#666', marginTop: '5px', display: 'block' }}>
+                                    💡 Supports: Direct image URLs or Google Drive share links
+                                </small>
                                 {formData.image && (
                                     <div className="image-preview">
-                                        <img
-                                            src={formData.image}
-                                            alt="Preview"
-                                        />
+                                        {!imageLoadError ? (
+                                            <img
+                                                src={getProxiedImageUrl(formData.image)}
+                                                alt="Preview"
+                                                onLoad={(e) => {
+                                                    console.log('✅ Image loaded successfully');
+                                                    setImageLoadError(false);
+                                                }}
+                                                onError={(e) => {
+                                                    const proxiedUrl = getProxiedImageUrl(formData.image);
+                                                    console.error('❌ Image load failed:', proxiedUrl);
+                                                    console.error('Status:', e.target.status);
+                                                    setImageLoadError(true);
+                                                }}
+                                            />
+                                        ) : (
+                                            <div style={{
+                                                padding: '20px',
+                                                textAlign: 'center',
+                                                backgroundColor: '#ffebee',
+                                                borderRadius: '4px',
+                                                color: '#d32f2f',
+                                                fontSize: '14px'
+                                            }}>
+                                                <p><strong>❌ Failed to load image</strong></p>
+                                                <small style={{ display: 'block', marginBottom: '10px' }}>Troubleshooting checklist:</small>
+                                                <ul style={{ 
+                                                    textAlign: 'left', 
+                                                    display: 'inline-block', 
+                                                    margin: '10px 0',
+                                                    paddingLeft: '20px'
+                                                }}>
+                                                    <li>✓ Google Drive link is shared with "Anyone with link"</li>
+                                                    <li>✓ The file is an image (jpg, png, gif, etc.)</li>
+                                                    <li>✓ The link is valid and points to an existing file</li>
+                                                    <li>✓ Check browser console for detailed error</li>
+                                                </ul>
+                                            </div>
+                                        )}
                                     </div>
                                 )}
                             </div>
@@ -466,8 +515,11 @@ const ProductForm = ({ onSubmit, initialData = null, isLoading = false, onCancel
                                     name="inventoryImage"
                                     value={formData.inventoryImage}
                                     onChange={handleChange}
-                                    placeholder="https://... (Optional)"
+                                    placeholder="https://... or paste Google Drive share link (Optional)"
                                 />
+                                <small style={{ color: '#666', marginTop: '5px', display: 'block' }}>
+                                    💡 Supports: Direct image URLs or Google Drive share links
+                                </small>
                             </div>
                         </div>
 

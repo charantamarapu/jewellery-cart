@@ -1,5 +1,6 @@
 import express from 'express';
 import multer from 'multer';
+import axios from 'axios';
 import { authenticateToken, isSellerOrAdmin } from './auth.js';
 
 const router = express.Router();
@@ -40,6 +41,54 @@ router.post('/image', authenticateToken, isSellerOrAdmin, upload.single('image')
     } catch (err) {
         console.error('Upload error:', err);
         res.status(500).json({ success: false, message: err.message });
+    }
+});
+
+// Image proxy endpoint - handles Google Drive images
+router.get('/proxy-image', async (req, res) => {
+    try {
+        const { url } = req.query;
+        
+        if (!url) {
+            return res.status(400).json({ success: false, message: 'URL is required' });
+        }
+
+        // Validate it's a Google Drive URL
+        if (!url.includes('drive.google.com')) {
+            return res.status(400).json({ success: false, message: 'Only Google Drive URLs are supported' });
+        }
+
+        console.log('🖼️ Proxying image...');
+
+        // Fetch the image from Google Drive using axios with automatic redirect following
+        const response = await axios.get(url, {
+            timeout: 20000,
+            maxRedirects: 5,
+            responseType: 'stream',
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+            }
+        });
+
+        console.log('✅ Image fetched successfully, streaming to client');
+
+        // Set response headers
+        res.set('Content-Type', response.headers['content-type'] || 'image/jpeg');
+        res.set('Access-Control-Allow-Origin', '*');
+        res.set('Cache-Control', 'public, max-age=86400');
+
+        // Stream the image to the client
+        response.data.pipe(res);
+
+    } catch (err) {
+        console.error('❌ Proxy error:', err.message);
+        if (!res.headersSent) {
+            res.status(500).json({ 
+                success: false, 
+                message: 'Failed to fetch image from Google Drive',
+                error: err.message 
+            });
+        }
     }
 });
 

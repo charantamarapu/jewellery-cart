@@ -1,8 +1,9 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { useLocation, Link } from 'react-router-dom';
 import { useProducts } from '../context/ProductContext';
 import { useCart } from '../context/CartContext';
 import { getProductImageSrc } from '../utils/imageUtils';
+import { calculateProductPrices } from '../utils/priceUtils';
 import './ProductList.css'; // Reuse product list styles
 import './SearchResults.css';
 
@@ -12,6 +13,7 @@ const SearchResults = () => {
     const { products } = useProducts();
     const { addToCart } = useCart();
 
+
     const filteredProducts = useMemo(() => {
         if (!query) return [];
         const lowerQuery = query.toLowerCase();
@@ -20,6 +22,8 @@ const SearchResults = () => {
             product.description.toLowerCase().includes(lowerQuery)
         );
     }, [query, products]);
+
+
 
     return (
         <section className="product-list-page search-results-page">
@@ -33,7 +37,7 @@ const SearchResults = () => {
                             <img src={getProductImageSrc(product)} alt={product.name} className="product-image" />
                             <h3>{product.name}</h3>
                             <p className="description">{product.description}</p>
-                            <p className="price">₹{product.price.toFixed(2)}</p>
+                            <p className="price">₹{(product.price || 0).toFixed(2)}</p>
                             <p className="stock">📦 Stock: {product.stock || 0}</p>
                             <div className="product-actions">
                                 <Link to={`/product/${product.id}`} className="view-details-btn">View Details</Link>

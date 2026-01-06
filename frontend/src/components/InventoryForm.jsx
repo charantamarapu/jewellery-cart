@@ -1,8 +1,35 @@
 import React, { useState, useEffect } from 'react';
 import './InventoryForm.css';
 
+// Convert Google Drive share link to direct image URL
+const convertGoogleDriveUrl = (url) => {
+    if (!url) return url;
+    
+    // If it's already a direct Google Drive view URL, return as-is
+    if (url.includes('drive.google.com/uc?export=view')) {
+        return url;
+    }
+    
+    // Match various Google Drive share link patterns
+    // Pattern 1: /d/FILE_ID/
+    const match1 = url.match(/\/d\/([a-zA-Z0-9-_]+)/);
+    if (match1 && match1[1]) {
+        return `https://drive.google.com/uc?export=view&id=${match1[1]}`;
+    }
+    
+    // Pattern 2: id=FILE_ID in query string
+    const match2 = url.match(/[?&]id=([a-zA-Z0-9-_]+)/);
+    if (match2 && match2[1]) {
+        return `https://drive.google.com/uc?export=view&id=${match2[1]}`;
+    }
+    
+    // If no Google Drive pattern found, return original URL
+    return url;
+};
+
 const InventoryForm = ({ onSubmit, initialData = null, isLoading = false }) => {
     const [metalPrices, setMetalPrices] = useState({});
+    const [imageLoadError, setImageLoadError] = useState(false);
     const [formData, setFormData] = useState({
         metal: '',
         metalPrice: 0,
