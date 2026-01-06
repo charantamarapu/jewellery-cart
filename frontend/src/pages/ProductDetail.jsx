@@ -1,15 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useProducts } from '../context/ProductContext';
 import { useCart } from '../context/CartContext';
 import { useToast } from '../context/ToastContext';
+import { useAuth } from '../context/AuthContext';
 import { getImageUrl } from '../utils/imageProxy.js';
 import './ProductDetail.css';
 
 const ProductDetail = () => {
     const { id } = useParams();
+    const navigate = useNavigate();
     const { products } = useProducts();
     const { addToCart, cart } = useCart();
+    const { user } = useAuth();
     const toast = useToast();
 
     const [product, setProduct] = useState(null);
@@ -18,6 +21,24 @@ const ProductDetail = () => {
     const [selectedImage, setSelectedImage] = useState(0);
     const [loading, setLoading] = useState(true);
     const [reviewsLoading, setReviewsLoading] = useState(true);
+    const [dimensionUnit, setDimensionUnit] = useState('cm');
+    const [userReview, setUserReview] = useState(null);
+    const [rating, setRating] = useState(0);
+    const [comment, setComment] = useState('');
+    const [submittingReview, setSubmittingReview] = useState(false);
+
+    // Helper function to convert dimensions
+    const convertDimension = (value, fromUnit, toUnit) => {
+        if (!value) return '';
+        if (fromUnit === toUnit) return parseFloat(value).toFixed(2);
+        if (fromUnit === 'cm' && toUnit === 'inch') {
+            return (value / 2.54).toFixed(2);
+        }
+        if (fromUnit === 'inch' && toUnit === 'cm') {
+            return (value * 2.54).toFixed(2);
+        }
+        return parseFloat(value).toFixed(2);
+    };
 
     // First try to find product from context, then fetch directly
     useEffect(() => {
@@ -53,6 +74,9 @@ const ProductDetail = () => {
                 .then(data => {
                     if (data.success && data.item) {
                         setInventory(data.item);
+                        if (data.item.dimensionUnit) {
+                            setDimensionUnit(data.item.dimensionUnit);
+                        }
                     }
                 })
                 .catch(err => console.error('Error fetching inventory:', err));
@@ -65,12 +89,22 @@ const ProductDetail = () => {
             fetch(`/api/reviews/product/${product.id}`)
                 .then(res => res.json())
                 .then(data => {
-                    setReviews(Array.isArray(data) ? data : []);
+                    const reviewsList = Array.isArray(data) ? data : [];
+                    setReviews(reviewsList);
+                    // Check if user has already reviewed this product
+                    if (user) {
+                        const existing = reviewsList.find(r => r.userId === user.id);
+                        if (existing) {
+                            setUserReview(existing);
+                            setRating(existing.rating);
+                            setComment(existing.comment);
+                        }
+                    }
                     setReviewsLoading(false);
                 })
                 .catch(() => setReviewsLoading(false));
         }
-    }, [product]);
+    }, [product, user]);
 
     const cartItem = cart.find(item => item.id === parseInt(id));
     const currentQtyInCart = cartItem ? cartItem.quantity : 0;
@@ -103,6 +137,86 @@ const ProductDetail = () => {
             toast.warning(`Sorry, only ${result.available} items available in stock.`);
         } else if (result.success) {
             toast.success(`${product.name} added to cart!`);
+        }
+    };
+
+    const handleSubmitReview = async (e) => {
+        e.preventDefault();
+
+        if (!user) {
+            toast.warning('Please log in to leave a review');
+            navigate('/login');
+            return;
+        }
+
+        if (!rating) {
+            toast.error('Please select a rating');
+            return;
+        }
+
+        setSubmittingReview(true);
+
+        try {
+            const response = await fetch('/api/reviews', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                },
+                body: JSON.stringify({
+                    productId: product.id,
+                    rating: rating,
+                    comment: comment.trim()
+                })
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.message || 'Failed to submit review');
+            }
+
+            const newReview = await response.json();
+            
+            // Update reviews list
+            if (userReview) {
+                setReviews(reviews.map(r => r.id === userReview.id ? newReview : r));
+            } else {
+                setReviews([newReview, ...reviews]);
+            }
+            
+            setUserReview(newReview);
+            toast.success(userReview ? 'Review updated successfully!' : 'Review submitted successfully!');
+        } catch (err) {
+            toast.error(err.message);
+        } finally {
+            setSubmittingReview(false);
+        }
+    };
+
+    const handleDeleteReview = async (reviewId) => {
+        if (!window.confirm('Are you sure you want to delete your review?')) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/reviews/${reviewId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to delete review');
+            }
+
+            setReviews(reviews.filter(r => r.id !== reviewId));
+            setUserReview(null);
+            setRating(0);
+            setComment('');
+            toast.success('Review deleted successfully!');
+        } catch (err) {
+            toast.error(err.message);
         }
     };
 
@@ -280,6 +394,51 @@ const ProductDetail = () => {
                             )}
                         </div>
 
+                        {(inventory.length || inventory.width || inventory.height) && (
+                            <div className="spec-group">
+                                <div className="dimension-header">
+                                    <h3>Dimensions</h3>
+                                    <div className="slider-container">
+                                        <input
+                                            type="checkbox"
+                                            id="dimensionUnitToggle"
+                                            name="dimensionUnitToggle"
+                                            checked={dimensionUnit === 'inch'}
+                                            onChange={(e) => setDimensionUnit(e.target.checked ? 'inch' : 'cm')}
+                                            className="slider-input"
+                                        />
+                                        <label htmlFor="dimensionUnitToggle" className="slider">
+                                        </label>
+                                        <span className="slider-label">{dimensionUnit === 'cm' ? 'cm' : 'in'}</span>
+                                    </div>
+                                </div>
+                                {inventory.length && (
+                                    <div className="spec-item">
+                                        <span className="spec-label">Length</span>
+                                        <span className="spec-value">
+                                            {convertDimension(inventory.length, inventory.dimensionUnit || 'cm', dimensionUnit)} {dimensionUnit}
+                                        </span>
+                                    </div>
+                                )}
+                                {inventory.width && (
+                                    <div className="spec-item">
+                                        <span className="spec-label">Width</span>
+                                        <span className="spec-value">
+                                            {convertDimension(inventory.width, inventory.dimensionUnit || 'cm', dimensionUnit)} {dimensionUnit}
+                                        </span>
+                                    </div>
+                                )}
+                                {inventory.height && (
+                                    <div className="spec-item">
+                                        <span className="spec-label">Height</span>
+                                        <span className="spec-value">
+                                            {convertDimension(inventory.height, inventory.dimensionUnit || 'cm', dimensionUnit)} {dimensionUnit}
+                                        </span>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
                         <div className="spec-group">
                             <h3>Price Breakdown</h3>
                             <div className="spec-item">
@@ -312,6 +471,60 @@ const ProductDetail = () => {
             {/* Reviews Section */}
             <div className="reviews-section">
                 <h2>Customer Reviews</h2>
+
+                {/* Review Form */}
+                <div className="review-form-container">
+                    <h3>{userReview ? 'Update Your Review' : 'Leave a Review'}</h3>
+                    <form onSubmit={handleSubmitReview} className="review-form">
+                        <div className="form-group">
+                            <label>Rating *</label>
+                            <div className="rating-input">
+                                {[1, 2, 3, 4, 5].map(star => (
+                                    <button
+                                        key={star}
+                                        type="button"
+                                        className={`star ${star <= rating ? 'active' : ''}`}
+                                        onClick={() => setRating(star)}
+                                    >
+                                        ★
+                                    </button>
+                                ))}
+                            </div>
+                            {rating > 0 && <span className="rating-value">{rating} out of 5 stars</span>}
+                        </div>
+
+                        <div className="form-group">
+                            <label htmlFor="comment">Your Review (Optional)</label>
+                            <textarea
+                                id="comment"
+                                value={comment}
+                                onChange={(e) => setComment(e.target.value)}
+                                placeholder="Share your experience with this product..."
+                                rows="4"
+                                maxLength="500"
+                            />
+                            <span className="char-count">{comment.length}/500</span>
+                        </div>
+
+                        <div className="form-actions">
+                            <button type="submit" disabled={!rating || submittingReview} className="btn-submit-review">
+                                {submittingReview ? 'Submitting...' : userReview ? 'Update Review' : 'Submit Review'}
+                            </button>
+                            {userReview && (
+                                <button
+                                    type="button"
+                                    onClick={() => handleDeleteReview(userReview.id)}
+                                    disabled={submittingReview}
+                                    className="btn-delete-review"
+                                >
+                                    Delete Review
+                                </button>
+                            )}
+                        </div>
+                    </form>
+                </div>
+
+                {/* Reviews List */}
                 {reviewsLoading ? (
                     <p>Loading reviews...</p>
                 ) : reviews.length === 0 ? (

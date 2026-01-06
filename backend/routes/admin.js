@@ -1,6 +1,7 @@
 import express from 'express';
 import { getDB } from '../db.js';
 import { authenticateToken, isSuperAdmin } from './auth.js';
+import { fetchLiveRates } from '../utils/liveRates.js';
 
 const router = express.Router();
 const SUPER_ADMIN_EMAIL = process.env.SUPER_ADMIN_EMAIL || 'admin@abc.com';
@@ -222,7 +223,15 @@ router.get('/metal-prices', async (req, res) => {
     const db = getDB();
     try {
         const prices = await db.all('SELECT * FROM metal_prices ORDER BY metal ASC');
-        res.json({ success: true, prices });
+        
+        // Also fetch live rates for reference
+        const liveRates = await fetchLiveRates();
+        
+        res.json({ 
+            success: true, 
+            prices,
+            liveRates: liveRates || null
+        });
     } catch (err) {
         console.error('Get metal prices error:', err);
         res.status(500).json({ success: false, message: 'Failed to load metal prices', error: err.message });

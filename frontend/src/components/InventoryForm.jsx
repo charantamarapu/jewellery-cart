@@ -44,7 +44,11 @@ const InventoryForm = ({ onSubmit, initialData = null, isLoading = false }) => {
         ornament: '',
         customOrnament: '',
         wastagePercent: 10,
-        makingChargePerGram: ''
+        makingChargePerGram: '',
+        length: '',
+        width: '',
+        height: '',
+        dimensionUnit: 'cm'
     });
 
     const [calculations, setCalculations] = useState({
@@ -307,10 +311,8 @@ const InventoryForm = ({ onSubmit, initialData = null, isLoading = false }) => {
                             className="slider-input"
                         />
                         <label htmlFor="hallmarked" className="slider">
-                            <span className={formData.hallmarked ? 'yes' : 'no'}>
-                                {formData.hallmarked ? 'Yes' : 'No'}
-                            </span>
                         </label>
+                        <span className="slider-label">{formData.hallmarked ? 'Yes' : 'No'}</span>
                     </div>
                 </div>
             </div>
@@ -545,6 +547,65 @@ const InventoryForm = ({ onSubmit, initialData = null, isLoading = false }) => {
                         className={errors.makingChargePerGram ? 'error' : ''}
                     />
                     {errors.makingChargePerGram && <span className="error-message">{errors.makingChargePerGram}</span>}
+                </div>
+            </div>
+
+            {/* Dimensions Section */}
+            <div className="form-section">
+                <h3>Dimensions</h3>
+                <div className="unit-toggle">
+                    <label>Unit: </label>
+                    <div className="slider-container">
+                        <input
+                            type="checkbox"
+                            id="inventoryDimensionUnit"
+                            name="inventoryDimensionUnit"
+                            checked={formData.dimensionUnit === 'inch'}
+                            onChange={(e) => setFormData({ ...formData, dimensionUnit: e.target.checked ? 'inch' : 'cm' })}
+                            className="slider-input"
+                        />
+                        <label htmlFor="inventoryDimensionUnit" className="slider">
+                        </label>
+                        <span className="slider-label">{formData.dimensionUnit === 'cm' ? 'cm' : 'in'}</span>
+                    </div>
+                </div>
+                <div className="form-row">
+                    <div className="form-group">
+                        <label>Length ({formData.dimensionUnit})</label>
+                        <input
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            placeholder="e.g., 5.5"
+                            value={formData.length}
+                            onChange={(e) => setFormData({ ...formData, length: e.target.value })}
+                            className={errors.length ? 'error' : ''}
+                        />
+                    </div>
+                    <div className="form-group">
+                        <label>Width ({formData.dimensionUnit})</label>
+                        <input
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            placeholder="e.g., 3.2"
+                            value={formData.width}
+                            onChange={(e) => setFormData({ ...formData, width: e.target.value })}
+                            className={errors.width ? 'error' : ''}
+                        />
+                    </div>
+                    <div className="form-group">
+                        <label>Height ({formData.dimensionUnit})</label>
+                        <input
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            placeholder="e.g., 8.0"
+                            value={formData.height}
+                            onChange={(e) => setFormData({ ...formData, height: e.target.value })}
+                            className={errors.height ? 'error' : ''}
+                        />
+                    </div>
                 </div>
             </div>
 

@@ -22,6 +22,7 @@ const SuperAdminPortal = () => {
     const [users, setUsers] = useState([]);
     const [orders, setOrders] = useState([]);
     const [metalPrices, setMetalPrices] = useState([]);
+    const [liveRates, setLiveRates] = useState(null);
     const [editingMetalPrice, setEditingMetalPrice] = useState(null);
     const [editingMetalValue, setEditingMetalValue] = useState('');
     const [savingUserId, setSavingUserId] = useState(null);
@@ -83,6 +84,7 @@ const SuperAdminPortal = () => {
             setUsers(usersData);
             setOrders(ordersData);
             setMetalPrices(metalPricesData.prices || []);
+            setLiveRates(metalPricesData.liveRates || null);
         } catch (err) {
             setError(err.message);
         } finally {
@@ -174,8 +176,11 @@ const SuperAdminPortal = () => {
             if (!res.ok) throw new Error(data.message || 'Failed to update metal price');
             
             // Update local state
-            setMetalPrices(prev => prev.map(m => m.id === metalId ? data.price : m));
+            setMetalPrices(prev => prev.map(m => m.metal === metal ? { ...m, pricePerGram: parseFloat(newPrice) } : m));
             setMessage({ type: 'success', text: `${metal.toUpperCase()} price updated successfully!` });
+            
+            // Reload page to refresh prices throughout the application
+            setTimeout(() => window.location.reload(), 800);
         } catch (err) {
             setError(err.message);
             setMessage({ type: 'error', text: err.message });
@@ -183,7 +188,7 @@ const SuperAdminPortal = () => {
     };
 
     const handleEditMetalPrice = (metal, currentPrice) => {
-        setEditingMetalPrice(metal.id);
+        setEditingMetalPrice(metal.metal);
         setEditingMetalValue(currentPrice.toString());
     };
 
@@ -442,13 +447,25 @@ const SuperAdminPortal = () => {
                     </div>
                     <button className="ghost" onClick={() => { setEditingMetalPrice(null); bootstrap(); }}>Refresh</button>
                 </div>
+
+                {/* Live Rates Reference */}
+                {liveRates && (liveRates.gold || liveRates.silver) && (
+                    <div className="live-rates-info">
+                        <p className="live-rates-label">📊 Live Market Rates (Reference):</p>
+                        <div className="live-rates-values">
+                            {liveRates.gold && <span>Gold: ₹{liveRates.gold.toFixed(2)}/g</span>}
+                            {liveRates.silver && <span>Silver: ₹{liveRates.silver.toFixed(2)}/g</span>}
+                        </div>
+                    </div>
+                )}
+
                 <div className="metal-prices-grid">
                     {metalPrices.length > 0 ? (
                         metalPrices.map(metal => (
-                            <div key={metal.id} className="metal-price-item">
+                            <div key={metal.metal} className="metal-price-item">
                                 <div className="metal-header">
                                     <h4 className="metal-name">{metal.metal.charAt(0).toUpperCase() + metal.metal.slice(1)}</h4>
-                                    {editingMetalPrice === metal.id ? (
+                                    {editingMetalPrice === metal.metal ? (
                                         <div className="metal-edit-actions">
                                             <button
                                                 className="save-btn"
@@ -472,7 +489,7 @@ const SuperAdminPortal = () => {
                                         </button>
                                     )}
                                 </div>
-                                {editingMetalPrice === metal.id ? (
+                                {editingMetalPrice === metal.metal ? (
                                     <input
                                         type="number"
                                         value={editingMetalValue}

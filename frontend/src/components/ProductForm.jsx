@@ -35,7 +35,12 @@ const ProductForm = ({ onSubmit, initialData = null, isLoading = false, onCancel
         customOrnament: '',
         wastagePercent: 10,
         makingChargePerGram: '',
-        inventoryImage: ''
+        inventoryImage: '',
+        // Dimensions
+        length: '',
+        width: '',
+        height: '',
+        dimensionUnit: 'cm'
     });
 
     const [calculations, setCalculations] = useState({
@@ -300,7 +305,6 @@ const ProductForm = ({ onSubmit, initialData = null, isLoading = false, onCancel
         }
 
         let imageData = null;
-        let imageType = null;
         let imageUrl = null;
 
         // Store original image URL (not proxied) - will be proxied when displayed
@@ -313,13 +317,11 @@ const ProductForm = ({ onSubmit, initialData = null, isLoading = false, onCancel
             name: formData.name,
             description: formData.description,
             image: imageData,
-            imageType: imageType,
             imageUrl: imageUrl,
             price: calculations.totalPrice,
             stock: parseInt(formData.stock) || 0,
             // Jewelry inventory specs
             metal: formData.metal,
-            metalPrice: parseFloat(formData.metalPrice),
             hallmarked: formData.hallmarked,
             purity: parseFloat(formData.purity),
             netWeight: parseFloat(formData.netWeight),
@@ -536,10 +538,8 @@ const ProductForm = ({ onSubmit, initialData = null, isLoading = false, onCancel
                                         className="slider-input"
                                     />
                                     <label htmlFor="hallmarked" className="slider">
-                                        <span className={formData.hallmarked ? 'yes' : 'no'}>
-                                            {formData.hallmarked ? 'Yes' : 'No'}
-                                        </span>
                                     </label>
+                                    <span className="slider-label">{formData.hallmarked ? 'Yes' : 'No'}</span>
                                 </div>
                             </div>
                         </div>
@@ -775,6 +775,71 @@ const ProductForm = ({ onSubmit, initialData = null, isLoading = false, onCancel
                                     className={errors.makingChargePerGram ? 'error' : ''}
                                 />
                                 {errors.makingChargePerGram && <span className="error-message">{errors.makingChargePerGram}</span>}
+                            </div>
+                        </div>
+
+                        {/* Dimensions Section */}
+                        <div className="dimensions-section">
+                            <h4>Dimensions (Optional)</h4>
+                            <div className="dimension-unit-toggle">
+                                <label>Unit: </label>
+                                <div className="slider-container">
+                                    <input
+                                        type="checkbox"
+                                        id="dimensionUnit"
+                                        name="dimensionUnit"
+                                        checked={formData.dimensionUnit === 'inch'}
+                                        onChange={(e) => setFormData({ ...formData, dimensionUnit: e.target.checked ? 'inch' : 'cm' })}
+                                        className="slider-input"
+                                    />
+                                    <label htmlFor="dimensionUnit" className="slider">
+                                    </label>
+                                    <span className="slider-label">{formData.dimensionUnit === 'cm' ? 'cm' : 'in'}</span>
+                                </div>
+                            </div>
+                            <div className="form-row">
+                                <div className="form-group">
+                                    <label htmlFor="length">Length ({formData.dimensionUnit})</label>
+                                    <input
+                                        type="number"
+                                        id="length"
+                                        name="length"
+                                        value={formData.length}
+                                        onChange={handleChange}
+                                        placeholder="e.g., 5.5"
+                                        step="0.01"
+                                        min="0"
+                                        className={errors.length ? 'error' : ''}
+                                    />
+                                </div>
+                                <div className="form-group">
+                                    <label htmlFor="width">Width ({formData.dimensionUnit})</label>
+                                    <input
+                                        type="number"
+                                        id="width"
+                                        name="width"
+                                        value={formData.width}
+                                        onChange={handleChange}
+                                        placeholder="e.g., 3.2"
+                                        step="0.01"
+                                        min="0"
+                                        className={errors.width ? 'error' : ''}
+                                    />
+                                </div>
+                                <div className="form-group">
+                                    <label htmlFor="height">Height ({formData.dimensionUnit})</label>
+                                    <input
+                                        type="number"
+                                        id="height"
+                                        name="height"
+                                        value={formData.height}
+                                        onChange={handleChange}
+                                        placeholder="e.g., 8.0"
+                                        step="0.01"
+                                        min="0"
+                                        className={errors.height ? 'error' : ''}
+                                    />
+                                </div>
                             </div>
                         </div>
 

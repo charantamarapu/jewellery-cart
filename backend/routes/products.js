@@ -101,7 +101,6 @@ router.get('/', async (req, res) => {
                    COALESCE(AVG(r.rating), 0) as avgRating,
                    COUNT(DISTINCT r.id) as reviewCount,
                    i.metal,
-                   i.metalPrice,
                    i.hallmarked,
                    i.purity,
                    i.netWeight,
@@ -129,7 +128,6 @@ router.get('/', async (req, res) => {
         const productsWithImages = products.map(p => ({
             ...p,
             image: p.image ? p.image.toString('base64') : null,
-            imageType: p.imageType || 'image/jpeg',
             imageUrl: p.imageUrl || null,
             price: calculatePriceFromInventory(p, metalPricesMap) // Calculate price dynamically
         }));
@@ -169,7 +167,6 @@ router.get('/seller/my-products', authenticateToken, isSellerOrAdmin, async (req
             products = await db.all(`
                 SELECT p.*, 
                        i.metal,
-                       i.metalPrice,
                        i.hallmarked,
                        i.purity,
                        i.netWeight,
@@ -189,7 +186,6 @@ router.get('/seller/my-products', authenticateToken, isSellerOrAdmin, async (req
             products = await db.all(`
                 SELECT p.*, 
                        i.metal,
-                       i.metalPrice,
                        i.hallmarked,
                        i.purity,
                        i.netWeight,
@@ -219,7 +215,6 @@ router.get('/seller/my-products', authenticateToken, isSellerOrAdmin, async (req
         const productsWithImages = products.map(p => ({
             ...p,
             image: p.image ? p.image.toString('base64') : null,
-            imageType: p.imageType || 'image/jpeg',
             imageUrl: p.imageUrl || null,
             price: calculatePriceFromInventory(p, metalPricesMap) // Calculate price dynamically
         }));
@@ -242,7 +237,6 @@ router.get('/:id', async (req, res) => {
                    COALESCE(AVG(r.rating), 0) as avgRating,
                    COUNT(DISTINCT r.id) as reviewCount,
                    i.metal,
-                   i.metalPrice,
                    i.hallmarked,
                    i.purity,
                    i.netWeight,
@@ -266,12 +260,9 @@ router.get('/:id', async (req, res) => {
 
         if (!product) return res.status(404).json({ message: 'Product not found' });
 
-        // Convert image buffer to base64 and include type
+        // Convert image buffer to base64
         if (product.image) {
             product.image = product.image.toString('base64');
-            if (!product.imageType) {
-                product.imageType = 'image/jpeg';
-            }
         }
 
         // Fetch current metal prices for dynamic calculation
@@ -399,7 +390,6 @@ router.get('/export/all', authenticateToken, isSellerOrAdmin, async (req, res) =
                 SELECT p.*, 
                        c.name as categoryName,
                        i.metal,
-                       i.metalPrice,
                        i.hallmarked,
                        i.purity,
                        i.netWeight,
@@ -427,7 +417,6 @@ router.get('/export/all', authenticateToken, isSellerOrAdmin, async (req, res) =
                 SELECT p.*, 
                        c.name as categoryName,
                        i.metal,
-                       i.metalPrice,
                        i.hallmarked,
                        i.purity,
                        i.netWeight,

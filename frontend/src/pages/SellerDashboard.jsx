@@ -73,7 +73,11 @@ const SellerDashboard = () => {
                 customOrnament: inventory.customOrnament || '',
                 wastagePercent: inventory.wastagePercent ? String(inventory.wastagePercent) : '10',
                 makingChargePerGram: inventory.makingChargePerGram ? String(inventory.makingChargePerGram) : '',
-                inventoryImage: inventory.image || ''
+                inventoryImage: inventory.image || '',
+                length: inventory.length ? String(inventory.length) : '',
+                width: inventory.width ? String(inventory.width) : '',
+                height: inventory.height ? String(inventory.height) : '',
+                dimensionUnit: inventory.dimensionUnit || 'cm'
             };
 
             setEditingProduct(product);
@@ -128,7 +132,11 @@ const SellerDashboard = () => {
                                 ornament: productData.ornament,
                                 customOrnament: productData.customOrnament,
                                 wastagePercent: productData.wastagePercent,
-                                makingChargePerGram: productData.makingChargePerGram
+                                makingChargePerGram: productData.makingChargePerGram,
+                                length: productData.length,
+                                width: productData.width,
+                                height: productData.height,
+                                dimensionUnit: productData.dimensionUnit
                             })
                         });
                         setMessage({ type: 'success', text: 'Product updated successfully!' });
@@ -175,7 +183,11 @@ const SellerDashboard = () => {
                                 wastagePercent: productData.wastagePercent,
                                 makingChargePerGram: productData.makingChargePerGram,
                                 totalMakingCharge: 0,
-                                totalPrice: productData.price
+                                totalPrice: productData.price,
+                                length: productData.length,
+                                width: productData.width,
+                                height: productData.height,
+                                dimensionUnit: productData.dimensionUnit
                             })
                         });
 

@@ -3,6 +3,7 @@ import { useProducts } from '../context/ProductContext';
 import { Link } from 'react-router-dom';
 import { getProductImageSrc } from '../utils/imageUtils';
 import { calculateProductPrices } from '../utils/priceUtils';
+import LivePrices from '../components/LivePrices';
 import './Home.css';
 
 const Home = () => {
@@ -13,6 +14,7 @@ const Home = () => {
 
   return (
     <section className="home-section">
+      <LivePrices />
       <div className="hero">
         <img
           src="https://images.unsplash.com/photo-1573408301185-9146fe634ad0?auto=format&fit=crop&w=1500&q=80"

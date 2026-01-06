@@ -528,6 +528,41 @@ button.ghost.danger:hover {
     margin-top: 1.5rem;
 }
 
+/* Live Rates Info */
+.live-rates-info {
+    background: linear-gradient(135deg, rgba(76, 175, 80, 0.08) 0%, rgba(56, 142, 60, 0.04) 100%);
+    border: 1px solid rgba(76, 175, 80, 0.2);
+    border-radius: var(--radius-md);
+    padding: 1rem 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.live-rates-label {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0 0 0.75rem 0;
+}
+
+.live-rates-values {
+    display: flex;
+    gap: 2rem;
+    flex-wrap: wrap;
+}
+
+.live-rates-values span {
+    font-size: 1rem;
+    color: #2e7d32;
+    font-weight: 600;
+}
+
+.metal-prices-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin-top: 1.5rem;
+}
+
 .metal-price-item {
     background: linear-gradient(135deg, rgba(212, 175, 55, 0.1) 0%, rgba(26, 26, 46, 0.02) 100%);
     border: 2px solid rgba(212, 175, 55, 0.2);

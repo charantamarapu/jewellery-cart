@@ -1,20 +1,16 @@
 import express from 'express';
 import { getDB } from '../db.js';
 import { authenticateToken, isSellerOrAdmin } from './auth.js';
+import { fetchLiveRates, getMetalPrices } from '../utils/liveRates.js';
 
 const router = express.Router();
 
-// Metal prices (you can fetch from an API or update manually)
-const METAL_PRICES = {
-    'gold': 14043,
-    'silver': 250,
-    'platinum': 6340
-};
-
-// Get current metal prices
+// Get current metal prices from database or live rates
 router.get('/metals/prices', async (req, res) => {
+    const db = getDB();
     try {
-        res.json({ success: true, prices: METAL_PRICES });
+        const prices = await getMetalPrices(db);
+        res.json({ success: true, prices });
     } catch (err) {
         res.status(500).json({ success: false, message: err.message });
     }
@@ -27,7 +23,6 @@ router.post('/add', authenticateToken, isSellerOrAdmin, async (req, res) => {
         const {
             productId,
             metal,
-            metalPrice,
             hallmarked,
             purity,
             netWeight,
@@ -42,7 +37,11 @@ router.post('/add', authenticateToken, isSellerOrAdmin, async (req, res) => {
             makingChargePerGram,
             totalMakingCharge,
             totalPrice,
-            image
+            image,
+            length,
+            width,
+            height,
+            dimensionUnit
         } = req.body;
 
         // Validation
@@ -62,15 +61,15 @@ router.post('/add', authenticateToken, isSellerOrAdmin, async (req, res) => {
 
         const result = await db.run(
             `INSERT INTO jewelry_inventory (
-                productId, sellerId, metal, metalPrice, hallmarked, purity, netWeight,
+                productId, sellerId, metal, hallmarked, purity, netWeight,
                 extraDescription, extraWeight, extraValue, grossWeight, type, ornament,
-                customOrnament, wastagePercent, makingChargePerGram, totalMakingCharge, totalPrice, image
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                customOrnament, wastagePercent, makingChargePerGram, totalMakingCharge, totalPrice, image,
+                length, width, height, dimensionUnit
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [
                 productId || null,
                 req.user.id,
                 metal,
-                metalPrice,
                 hallmarked ? 1 : 0,
                 purity,
                 netWeight,
@@ -85,7 +84,11 @@ router.post('/add', authenticateToken, isSellerOrAdmin, async (req, res) => {
                 makingChargePerGram,
                 totalMakingCharge || 0, // Not required, will be calculated dynamically
                 totalPrice || 0, // Not required, will be calculated dynamically
-                image || null
+                image || null,
+                length || null,
+                width || null,
+                height || null,
+                dimensionUnit || 'cm'
             ]
         );
 
@@ -244,7 +247,6 @@ router.put('/:id', authenticateToken, isSellerOrAdmin, async (req, res) => {
 
         const {
             metal,
-            metalPrice,
             hallmarked,
             purity,
             netWeight,
@@ -257,21 +259,27 @@ router.put('/:id', authenticateToken, isSellerOrAdmin, async (req, res) => {
             customOrnament,
             wastagePercent,
             makingChargePerGram,
-            image
+            image,
+            length,
+            width,
+            height,
+            dimensionUnit
         } = req.body;
 
         await db.run(
             `UPDATE jewelry_inventory SET
-                metal = ?, metalPrice = ?, hallmarked = ?, purity = ?, netWeight = ?,
+                metal = ?, hallmarked = ?, purity = ?, netWeight = ?,
                 extraDescription = ?, extraWeight = ?, extraValue = ?, grossWeight = ?,
                 type = ?, ornament = ?, customOrnament = ?, wastagePercent = ?,
-                makingChargePerGram = ?, image = ?, updatedAt = CURRENT_TIMESTAMP
+                makingChargePerGram = ?, image = ?, length = ?, width = ?, height = ?, 
+                dimensionUnit = ?, updatedAt = CURRENT_TIMESTAMP
             WHERE id = ?`,
             [
-                metal, metalPrice, hallmarked ? 1 : 0, purity, netWeight,
+                metal, hallmarked ? 1 : 0, purity, netWeight,
                 extraDescription, extraWeight || 0, extraValue || 0, grossWeight,
                 type, ornament, customOrnament, wastagePercent,
-                makingChargePerGram, image || null, req.params.id
+                makingChargePerGram, image || null, length || null, width || null, height || null,
+                dimensionUnit || 'cm', req.params.id
             ]
         );
 

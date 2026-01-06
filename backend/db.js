@@ -158,7 +158,6 @@ export const setupDB = async () => {
                             productId INTEGER,
                             sellerId INTEGER NOT NULL,
                             metal TEXT NOT NULL,
-                            metalPrice REAL NOT NULL,
                             hallmarked INTEGER NOT NULL DEFAULT 0,
                             purity REAL NOT NULL,
                             netWeight REAL NOT NULL,
@@ -174,10 +173,24 @@ export const setupDB = async () => {
                             totalMakingCharge REAL NOT NULL,
                             totalPrice REAL NOT NULL,
                             image TEXT,
+                            length REAL,
+                            width REAL,
+                            height REAL,
+                            dimensionUnit TEXT DEFAULT 'cm',
                             createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
                             updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
                             FOREIGN KEY (productId) REFERENCES products(id) ON DELETE CASCADE,
-                            FOREIGN KEY (sellerId) REFERENCES users(id)
+                            FOREIGN KEY (sellerId) REFERENCES users(id),
+                            FOREIGN KEY (metal) REFERENCES metal_prices(metal)
+                        );
+
+                        CREATE TABLE IF NOT EXISTS metal_prices (
+                            metal TEXT PRIMARY KEY,
+                            pricePerGram REAL NOT NULL,
+                            createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+                            updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+                            updatedBy INTEGER,
+                            FOREIGN KEY (updatedBy) REFERENCES users(id)
                         );
 
                         CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
@@ -200,144 +213,9 @@ export const setupDB = async () => {
                         await migrateFromJSON();
                     }
 
-                    // Add stock column if it doesn't exist (migration)
-                    try {
-                        await dbExec('ALTER TABLE products ADD COLUMN stock INTEGER DEFAULT 0');
-                        console.log('✅ Added stock column to products table');
-                    } catch (err) {
-                        if (!err.message.includes('duplicate column')) {
-                            console.warn('⚠️  Stock column migration warning:', err.message);
-                        }
-                    }
-
-                    // Add categoryId column if it doesn't exist
-                    try {
-                        await dbExec('ALTER TABLE products ADD COLUMN categoryId INTEGER');
-                        console.log('✅ Added categoryId column to products table');
-                    } catch (err) {
-                        if (!err.message.includes('duplicate column')) {
-                            console.warn('⚠️  CategoryId migration warning:', err.message);
-                        }
-                    }
-
-                    // Add images column if it doesn't exist
-                    try {
-                        await dbExec("ALTER TABLE products ADD COLUMN images TEXT DEFAULT '[]'");
-                        console.log('✅ Added images column to products table');
-                    } catch (err) {
-                        if (!err.message.includes('duplicate column')) {
-                            console.warn('⚠️  Images migration warning:', err.message);
-                        }
-                    }
-
-                    // Add image column to jewelry_inventory if it doesn't exist
-                    try {
-                        await dbExec("ALTER TABLE jewelry_inventory ADD COLUMN image TEXT");
-                        console.log('✅ Added image column to jewelry_inventory table');
-                    } catch (err) {
-                        if (!err.message.includes('duplicate column')) {
-                            console.warn('⚠️  Jewelry Inventory Image migration warning:', err.message);
-                        }
-                    }
-
-                    // Add imageType column to products if it doesn't exist
-                    try {
-                        await dbExec("ALTER TABLE products ADD COLUMN imageType TEXT");
-                        console.log('✅ Added imageType column to products table');
-                    } catch (err) {
-                        if (!err.message.includes('duplicate column')) {
-                            console.warn('⚠️  ImageType migration warning:', err.message);
-                        }
-                    }
-
-                    // Remove image BLOB and imageType columns from products (migration to URL-only images)
-                    try {
-                        const productInfo = await dbAll("PRAGMA table_info(products)");
-                        const hasImage = productInfo.some(col => col.name === 'image');
-                        const hasImageType = productInfo.some(col => col.name === 'imageType');
-                        
-                        if (hasImage || hasImageType) {
-                            console.log('⏳ Migrating to URL-only images - removing image BLOB and imageType columns...');
-                            // Recreate table without image BLOB and imageType columns
-                            await dbExec(`
-                                BEGIN TRANSACTION;
-                                CREATE TABLE products_new (
-                                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                                    name TEXT NOT NULL,
-                                    imageUrl TEXT,
-                                    images TEXT DEFAULT '[]',
-                                    description TEXT,
-                                    stock INTEGER DEFAULT 0,
-                                    categoryId INTEGER,
-                                    sellerId INTEGER,
-                                    createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
-                                    FOREIGN KEY (sellerId) REFERENCES users(id),
-                                    FOREIGN KEY (categoryId) REFERENCES categories(id)
-                                );
-                                INSERT INTO products_new 
-                                SELECT id, name, imageUrl, images, description, stock, categoryId, sellerId, createdAt 
-                                FROM products;
-                                DROP TABLE products;
-                                ALTER TABLE products_new RENAME TO products;
-                                COMMIT;
-                            `);
-                            console.log('✅ Successfully migrated to URL-only images - image BLOB and imageType columns removed');
-                        }
-                    } catch (err) {
-                        if (!err.message.includes('no such column')) {
-                            console.warn('⚠️  Image migration warning:', err.message);
-                        }
-                    }
-
-                    // Add imageUrl column to products if it doesn't exist
-                    try {
-                        await dbExec("ALTER TABLE products ADD COLUMN imageUrl TEXT");
-                        console.log('✅ Added imageUrl column to products table');
-                    } catch (err) {
-                        if (!err.message.includes('duplicate column')) {
-                            console.warn('⚠️  ImageUrl migration warning:', err.message);
-                        }
-                    }
-
-                    // Remove price column from products if it exists (migration to dynamic pricing)
-                    try {
-                        const productInfo = await dbAll("PRAGMA table_info(products)");
-                        const hasPrice = productInfo.some(col => col.name === 'price');
-                        
-                        if (hasPrice) {
-                            console.log('⏳ Migrating to dynamic pricing - removing price column...');
-                            await dbExec(`
-                                BEGIN TRANSACTION;
-                                CREATE TABLE products_new (
-                                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                                    name TEXT NOT NULL,
-                                    imageUrl TEXT,
-                                    images TEXT DEFAULT '[]',
-                                    description TEXT,
-                                    stock INTEGER DEFAULT 0,
-                                    categoryId INTEGER,
-                                    sellerId INTEGER,
-                                    createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
-                                    FOREIGN KEY (sellerId) REFERENCES users(id),
-                                    FOREIGN KEY (categoryId) REFERENCES categories(id)
-                                );
-                                INSERT INTO products_new 
-                                SELECT id, name, imageUrl, images, description, stock, categoryId, sellerId, createdAt 
-                                FROM products;
-                                DROP TABLE products;
-                                ALTER TABLE products_new RENAME TO products;
-                                COMMIT;
-                            `);
-                            console.log('✅ Successfully migrated to dynamic pricing - price column removed');
-                        }
-                    } catch (err) {
-                        if (!err.message.includes('no such column')) {
-                            console.warn('⚠️  Dynamic pricing migration warning:', err.message);
-                        }
-                    }
-
                     await ensureSuperAdmin();
                     await seedDefaultCategories();
+                    await seedMetalPrices();
 
                     console.log('✅ SQLite Database connected and initialized');
                     resolve();
@@ -506,4 +384,24 @@ async function seedDefaultCategories() {
         }
     }
     console.log('✅ Seeded default categories');
+}
+
+async function seedMetalPrices() {
+    const metals = [
+        { metal: 'gold', pricePerGram: 14000 },
+        { metal: 'silver', pricePerGram: 250 },
+        { metal: 'platinum', pricePerGram: 6000 }
+    ];
+
+    for (const m of metals) {
+        try {
+            await dbRun(
+                'INSERT OR IGNORE INTO metal_prices (metal, pricePerGram) VALUES (?, ?)',
+                [m.metal, m.pricePerGram]
+            );
+        } catch (err) {
+            // Ignore duplicates
+        }
+    }
+    console.log('✅ Seeded default metal prices');
 }

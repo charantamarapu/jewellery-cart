@@ -308,3 +308,114 @@ select {
 select::-ms-expand {
     display: none;
 }
+.form-section {
+    background: rgba(255, 255, 255, 0.5);
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    border-left: 4px solid #3498db;
+    display: block !important;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.form-section h3 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    color: #333;
+    font-size: 18px;
+    font-weight: 700;
+    display: block;
+}
+
+.unit-toggle {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 15px;
+    padding: 10px;
+    background: rgba(52, 152, 219, 0.1);
+    border-radius: 6px;
+}
+
+.unit-toggle label {
+    font-weight: 600;
+    color: #333;
+    margin: 0;
+}
+
+.slider-input {
+    display: none;
+}
+
+.slider-container {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.slider {
+    display: inline-block;
+    position: relative;
+    width: 60px;
+    height: 32px;
+    background-color: #ccc;
+    border-radius: 32px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    border: none;
+    padding: 0;
+    outline: none;
+}
+
+.slider::after {
+    content: '';
+    position: absolute;
+    width: 28px;
+    height: 28px;
+    background-color: white;
+    border-radius: 50%;
+    top: 2px;
+    left: 2px;
+    transition: left 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.slider-input:checked ~ .slider {
+    background-color: #3498db;
+}
+
+.slider-input:checked ~ .slider::after {
+    left: 30px;
+}
+
+.slider-label {
+    font-weight: 600;
+    font-size: 14px;
+    color: #333;
+    min-width: 30px;
+    text-align: left;
+}
+
+.slider span {
+    display: none;
+}
+
+.unit-select {
+    padding: 6px 10px;
+    border: 1px solid #3498db;
+    border-radius: 4px;
+    background-color: white;
+    color: #333;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.unit-select:hover {
+    border-color: #2980b9;
+}
+
+.unit-select:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+}

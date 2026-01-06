@@ -6,6 +6,7 @@ import { getProductImageSrc } from '../utils/imageUtils';
 import { calculateProductPrices } from '../utils/priceUtils';
 import ProductForm from '../components/ProductForm';
 import ProductImportExport from '../components/ProductImportExport';
+import LivePrices from '../components/LivePrices';
 import './AdminDashboard.css';
 
 const AdminDashboard = () => {
@@ -59,7 +60,11 @@ const AdminDashboard = () => {
                 customOrnament: inventory.customOrnament || '',
                 wastagePercent: inventory.wastagePercent ? String(inventory.wastagePercent) : '10',
                 makingChargePerGram: inventory.makingChargePerGram ? String(inventory.makingChargePerGram) : '',
-                inventoryImage: inventory.image || ''
+                inventoryImage: inventory.image || '',
+                length: inventory.length ? String(inventory.length) : '',
+                width: inventory.width ? String(inventory.width) : '',
+                height: inventory.height ? String(inventory.height) : '',
+                dimensionUnit: inventory.dimensionUnit || 'cm'
             };
 
             setEditingProduct(product);
@@ -118,7 +123,11 @@ const AdminDashboard = () => {
                                 makingChargePerGram: productData.makingChargePerGram,
                                 totalMakingCharge: productData.totalMakingCharge,
                                 totalPrice: productData.totalPrice,
-                                image: productData.inventoryImage
+                                image: productData.inventoryImage,
+                                length: productData.length,
+                                width: productData.width,
+                                height: productData.height,
+                                dimensionUnit: productData.dimensionUnit
                             })
                         });
                         inventoryResult = await inventoryResponse.json();
@@ -148,7 +157,11 @@ const AdminDashboard = () => {
                                 makingChargePerGram: productData.makingChargePerGram,
                                 totalMakingCharge: productData.totalMakingCharge,
                                 totalPrice: productData.totalPrice,
-                                image: productData.inventoryImage
+                                image: productData.inventoryImage,
+                                length: productData.length,
+                                width: productData.width,
+                                height: productData.height,
+                                dimensionUnit: productData.dimensionUnit
                             })
                         });
                         inventoryResult = await inventoryResponse.json();
@@ -201,7 +214,11 @@ const AdminDashboard = () => {
                             makingChargePerGram: productData.makingChargePerGram,
                             totalMakingCharge: productData.totalMakingCharge,
                             totalPrice: productData.totalPrice,
-                            image: productData.inventoryImage
+                            image: productData.inventoryImage,
+                            length: productData.length,
+                            width: productData.width,
+                            height: productData.height,
+                            dimensionUnit: productData.dimensionUnit
                         })
                     });
 
@@ -262,6 +279,8 @@ const AdminDashboard = () => {
         <section className="admin-page">
             <h2>{user?.role === 'seller' ? 'Seller Dashboard' : 'Admin Dashboard'}</h2>
             <p className="welcome-text">Welcome, {user?.role === 'seller' ? 'Seller' : 'Admin'}! Manage your jewelry products here.</p>
+
+            <LivePrices />
 
             {message.text && (
                 <div className={`message ${message.type}`}>

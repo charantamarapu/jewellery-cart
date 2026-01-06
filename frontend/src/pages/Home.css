@@ -5,6 +5,13 @@
 .home-section {
     max-width: 1400px;
     margin: 0 auto;
+    padding: 2rem 1.5rem 0;
+}
+
+/* Live Prices Widget */
+.home-section > .live-prices-widget {
+    margin-bottom: 2rem;
+    width: 100%;
 }
 
 /* Hero Section */

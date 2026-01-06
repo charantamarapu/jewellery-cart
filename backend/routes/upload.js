@@ -30,12 +30,10 @@ router.post('/image', authenticateToken, isSellerOrAdmin, upload.single('image')
 
         // Convert buffer to base64 for transmission
         const base64Image = req.file.buffer.toString('base64');
-        const imageType = req.file.mimetype;
 
         res.json({
             success: true,
             image: base64Image,
-            imageType: imageType,
             size: req.file.size
         });
     } catch (err) {
