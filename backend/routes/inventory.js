@@ -116,14 +116,11 @@ router.get('/product/:productId', async (req, res) => {
             return res.json({ success: true, item: null });
         }
 
-        // Fetch current metal prices from metal_prices table
-        const metalPrices = await db.all('SELECT metal, pricePerGram FROM metal_prices');
-        const metalPricesMap = metalPrices.reduce((acc, curr) => {
-            acc[curr.metal.toLowerCase()] = curr.pricePerGram;
-            return acc;
-        }, {});
+        // Fetch current metal prices (live rates for gold/silver, database for platinum)
+        const allPrices = await getMetalPrices(db);
+        const metalPricesMap = allPrices ? allPrices : {};
 
-        // Get current metal price for this item
+        // Get current metal price for this item (uses live rates for gold/silver)
         const metalKey = item.metal ? item.metal.toLowerCase() : '';
         const currentMetalPrice = metalPricesMap[metalKey] || item.metalPrice || 0;
 

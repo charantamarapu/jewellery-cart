@@ -9,6 +9,7 @@ const getProxiedImageUrl = (url) => {
 
 const ProductForm = ({ onSubmit, initialData = null, isLoading = false, onCancel = null }) => {
     const [metalPrices, setMetalPrices] = useState({});
+    const [liveMetalPrices, setLiveMetalPrices] = useState(null);
     const [expandedSection, setExpandedSection] = useState('basic'); // 'basic' or 'jewelry'
     const [imageLoadError, setImageLoadError] = useState(false);
     const [inventoryImageLoadError, setInventoryImageLoadError] = useState(false);
@@ -92,6 +93,18 @@ const ProductForm = ({ onSubmit, initialData = null, isLoading = false, onCancel
             setFormData(initialData);
         }
     }, [initialData]);
+
+    // Fetch live metal prices on mount
+    useEffect(() => {
+        fetch('/api/inventory/metals/prices')
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    setLiveMetalPrices(data.prices);
+                }
+            })
+            .catch(err => console.error('Error fetching live prices:', err));
+    }, []);
 
     useEffect(() => {
         calculateTotalPrice();
@@ -489,22 +502,26 @@ const ProductForm = ({ onSubmit, initialData = null, isLoading = false, onCancel
                             <div className="form-group">
                                 <label>Metal <span className="required">*</span></label>
                                 <div className="metal-toggle-group">
-                                    {METAL_OPTIONS.map(opt => (
-                                        <button
-                                            key={opt.value}
-                                            type="button"
-                                            className={`metal-toggle ${formData.metal === opt.value ? 'active' : ''}`}
-                                            onClick={() => handleMetalChange({ target: { value: opt.value } })}
-                                        >
-                                            <span className="metal-name">{opt.label}</span>
-                                            <span className="metal-price">₹{opt.pricePerGram}/g</span>
-                                        </button>
-                                    ))}
+                                    {METAL_OPTIONS.map(opt => {
+                                        const livePrice = liveMetalPrices && liveMetalPrices[opt.value.toLowerCase()];
+                                        const displayPrice = livePrice || opt.pricePerGram;
+                                        return (
+                                            <button
+                                                key={opt.value}
+                                                type="button"
+                                                className={`metal-toggle ${formData.metal === opt.value ? 'active' : ''}`}
+                                                onClick={() => handleMetalChange({ target: { value: opt.value } })}
+                                            >
+                                                <span className="metal-name">{opt.label}</span>
+                                                <span className="metal-price">
+                                                    ₹{displayPrice.toFixed(0)}/g
+                                                    {livePrice && <span className="live-dot">●</span>}
+                                                </span>
+                                            </button>
+                                        );
+                                    })}
                                 </div>
                                 {errors.metal && <span className="error-message">{errors.metal}</span>}
-                                {formData.metalPrice > 0 && (
-                                    <p className="metal-price-display">✓ Selected: ₹{formData.metalPrice}/gram</p>
-                                )}
                             </div>
                         </div>
 

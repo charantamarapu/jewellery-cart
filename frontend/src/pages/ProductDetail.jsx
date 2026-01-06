@@ -26,6 +26,7 @@ const ProductDetail = () => {
     const [rating, setRating] = useState(0);
     const [comment, setComment] = useState('');
     const [submittingReview, setSubmittingReview] = useState(false);
+    const [liveMetalPrices, setLiveMetalPrices] = useState(null);
 
     // Helper function to convert dimensions
     const convertDimension = (value, fromUnit, toUnit) => {
@@ -82,6 +83,18 @@ const ProductDetail = () => {
                 .catch(err => console.error('Error fetching inventory:', err));
         }
     }, [product]);
+
+    // Fetch live metal prices
+    useEffect(() => {
+        fetch('/api/inventory/metals/prices')
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    setLiveMetalPrices(data.prices);
+                }
+            })
+            .catch(err => console.error('Error fetching live prices:', err));
+    }, []);
 
     // Fetch reviews
     useEffect(() => {
@@ -443,7 +456,18 @@ const ProductDetail = () => {
                             <h3>Price Breakdown</h3>
                             <div className="spec-item">
                                 <span className="spec-label">Metal Price</span>
-                                <span className="spec-value">₹{inventory.metalPrice}/gram</span>
+                                <span className="spec-value">
+                                    {liveMetalPrices && inventory.metal ? (
+                                        <>
+                                            ₹{(liveMetalPrices[inventory.metal.toLowerCase()] || inventory.metalPrice).toFixed(2)}/gram
+                                            {liveMetalPrices[inventory.metal.toLowerCase()] && (
+                                                <span className="live-indicator-small">🔴 LIVE</span>
+                                            )}
+                                        </>
+                                    ) : (
+                                        `₹${inventory.metalPrice}/gram`
+                                    )}
+                                </span>
                             </div>
                             <div className="spec-item">
                                 <span className="spec-label">Wastage</span>

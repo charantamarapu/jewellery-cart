@@ -1,6 +1,7 @@
 import express from 'express';
 import { getDB } from '../db.js';
 import { authenticateToken, isAdmin, isSellerOrAdmin } from './auth.js';
+import { getMetalPrices } from '../utils/liveRates.js';
 
 const router = express.Router();
 
@@ -86,12 +87,9 @@ router.get('/', async (req, res) => {
         const countQuery = `SELECT COUNT(*) as total FROM products p ${whereSQL}`;
         const { total } = await db.get(countQuery, params);
 
-        // Fetch current metal prices for dynamic calculation
-        const metalPrices = await db.all('SELECT metal, pricePerGram FROM metal_prices');
-        const metalPricesMap = metalPrices.reduce((acc, curr) => {
-            acc[curr.metal.toLowerCase()] = curr.pricePerGram;
-            return acc;
-        }, {});
+        // Fetch current metal prices (live rates for gold/silver, database for platinum)
+        const metalPrices = await getMetalPrices(db);
+        const metalPricesMap = metalPrices ? metalPrices : {};
 
         // Get paginated products with category, inventory, and average rating
         const productsQuery = `
@@ -204,12 +202,9 @@ router.get('/seller/my-products', authenticateToken, isSellerOrAdmin, async (req
             `, [req.user.id]);
         }
 
-        // Fetch current metal prices for dynamic calculation
-        const metalPrices = await db.all('SELECT metal, pricePerGram FROM metal_prices');
-        const metalPricesMap = metalPrices.reduce((acc, curr) => {
-            acc[curr.metal.toLowerCase()] = curr.pricePerGram;
-            return acc;
-        }, {});
+        // Fetch current metal prices (live rates for gold/silver, database for platinum)
+        const metalPrices = await getMetalPrices(db);
+        const metalPricesMap = metalPrices ? metalPrices : {};
 
         // Convert image buffers to base64 and calculate dynamic prices
         const productsWithImages = products.map(p => ({
@@ -265,12 +260,9 @@ router.get('/:id', async (req, res) => {
             product.image = product.image.toString('base64');
         }
 
-        // Fetch current metal prices for dynamic calculation
-        const metalPrices = await db.all('SELECT metal, pricePerGram FROM metal_prices');
-        const metalPricesMap = metalPrices.reduce((acc, curr) => {
-            acc[curr.metal.toLowerCase()] = curr.pricePerGram;
-            return acc;
-        }, {});
+        // Fetch current metal prices (live rates for gold/silver, database for platinum)
+        const metalPrices = await getMetalPrices(db);
+        const metalPricesMap = metalPrices ? metalPrices : {};
 
         // Calculate price dynamically
         product.price = calculatePriceFromInventory(product, metalPricesMap);
@@ -438,14 +430,9 @@ router.get('/export/all', authenticateToken, isSellerOrAdmin, async (req, res) =
             `, [req.user.id]);
         }
 
-
-
-        // Fetch current metal prices for dynamic calculation
-        const metalPrices = await db.all('SELECT metal, pricePerGram FROM metal_prices');
-        const metalPricesMap = metalPrices.reduce((acc, curr) => {
-            acc[curr.metal.toLowerCase()] = curr.pricePerGram;
-            return acc;
-        }, {});
+        // Fetch current metal prices (live rates for gold/silver, database for platinum)
+        const metalPrices = await getMetalPrices(db);
+        const metalPricesMap = metalPrices ? metalPrices : {};
 
         // Clean up data for export with dynamically calculated prices
         const cleanedProducts = products.map(p => ({

@@ -29,6 +29,7 @@ const convertGoogleDriveUrl = (url) => {
 
 const InventoryForm = ({ onSubmit, initialData = null, isLoading = false }) => {
     const [metalPrices, setMetalPrices] = useState({});
+    const [liveMetalPrices, setLiveMetalPrices] = useState(null);
     const [imageLoadError, setImageLoadError] = useState(false);
     const [formData, setFormData] = useState({
         metal: '',
@@ -95,6 +96,18 @@ const InventoryForm = ({ onSubmit, initialData = null, isLoading = false }) => {
             setFormData(initialData);
         }
     }, [initialData]);
+
+    // Fetch live metal prices on mount
+    useEffect(() => {
+        fetch('/api/inventory/metals/prices')
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    setLiveMetalPrices(data.prices);
+                }
+            })
+            .catch(err => console.error('Error fetching live prices:', err));
+    }, []);
 
     // Recalculate whenever relevant fields change
     useEffect(() => {
@@ -283,16 +296,17 @@ const InventoryForm = ({ onSubmit, initialData = null, isLoading = false }) => {
                         className={errors.metal ? 'error' : ''}
                     >
                         <option value="">Select a metal</option>
-                        {METAL_OPTIONS.map(opt => (
-                            <option key={opt.value} value={opt.value}>
-                                {opt.label} (₹{opt.pricePerGram}/gram)
-                            </option>
-                        ))}
+                        {METAL_OPTIONS.map(opt => {
+                            const livePrice = liveMetalPrices && liveMetalPrices[opt.value.toLowerCase()];
+                            const displayPrice = livePrice || opt.pricePerGram;
+                            return (
+                                <option key={opt.value} value={opt.value}>
+                                    {opt.label} (₹{displayPrice.toFixed(0)}/gram{livePrice ? ' 🔴' : ''})
+                                </option>
+                            );
+                        })}
                     </select>
                     {errors.metal && <span className="error-message">{errors.metal}</span>}
-                    {formData.metalPrice > 0 && (
-                        <p className="metal-price-display">Live Price: ₹{formData.metalPrice}/gram</p>
-                    )}
                 </div>
             </div>
 
