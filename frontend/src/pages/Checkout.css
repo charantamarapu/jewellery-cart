@@ -154,6 +154,9 @@
     padding: 1rem;
     cursor: pointer;
     transition: all var(--transition-fast);
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
 }
 
 .address-option:hover {

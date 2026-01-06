@@ -33,8 +33,9 @@ export const ProductProvider = ({ children }) => {
                 body: JSON.stringify(product),
             });
             if (response.ok) {
+                const newProduct = await response.json();
                 fetchProducts();
-                return { success: true };
+                return { success: true, productId: newProduct.id };
             } else {
                 const data = await response.json();
                 return { success: false, message: data.message };

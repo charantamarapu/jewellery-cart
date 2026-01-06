@@ -134,6 +134,13 @@
     margin-bottom: 1rem;
 }
 
+.stock {
+    font-size: 0.85rem;
+    color: #2e7d32;
+    font-weight: 600;
+    margin-bottom: 1rem;
+}
+
 .view-details-btn {
     color: var(--primary);
     font-size: 0.95rem;

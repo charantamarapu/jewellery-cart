@@ -11,7 +11,7 @@ export default function CategoryFilter({ selectedCategory, onCategoryChange }) {
 
     const fetchCategories = async () => {
         try {
-            const response = await fetch('http://localhost:5000/api/categories');
+            const response = await fetch('/api/categories');
             if (response.ok) {
                 const data = await response.json();
                 setCategories(data);

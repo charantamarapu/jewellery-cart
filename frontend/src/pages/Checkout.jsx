@@ -146,6 +146,33 @@ const Checkout = () => {
         }
     };
 
+    const handleDeleteAddress = async (addressId) => {
+        if (!window.confirm('Are you sure you want to delete this address?')) return;
+
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch(`/api/addresses/${addressId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (response.ok) {
+                setSavedAddresses(savedAddresses.filter(a => a.id !== addressId));
+                if (selectedAddressId === addressId) {
+                    setSelectedAddressId(null);
+                }
+                alert('Address deleted successfully');
+            } else {
+                alert('Failed to delete address');
+            }
+        } catch (error) {
+            console.error('Error deleting address:', error);
+            alert('Error deleting address');
+        }
+    };
+
     if (cart.length === 0) {
         return <div className="checkout-page"><h2>Your cart is empty</h2></div>;
     }
@@ -168,20 +195,39 @@ const Checkout = () => {
                                     <div
                                         key={addr.id}
                                         className={`address-option ${selectedAddressId === addr.id ? 'selected' : ''}`}
-                                        onClick={() => setSelectedAddressId(addr.id)}
                                     >
-                                        <label className="address-label">
-                                            <input
-                                                type="radio"
-                                                checked={selectedAddressId === addr.id}
-                                                onChange={() => setSelectedAddressId(addr.id)}
-                                            />
-                                            <span>{addr.fullName}</span>
-                                        </label>
-                                        <div className="address-details">
-                                            {addr.addressLine1}<br />
-                                            {addr.city}, {addr.zip}
+                                        <div style={{ flex: 1, cursor: 'pointer' }} onClick={() => setSelectedAddressId(addr.id)}>
+                                            <label className="address-label">
+                                                <input
+                                                    type="radio"
+                                                    checked={selectedAddressId === addr.id}
+                                                    onChange={() => setSelectedAddressId(addr.id)}
+                                                />
+                                                <span>{addr.fullName}</span>
+                                            </label>
+                                            <div className="address-details">
+                                                {addr.addressLine1}<br />
+                                                {addr.city}, {addr.zip}
+                                            </div>
                                         </div>
+                                        <button
+                                            type="button"
+                                            onClick={() => handleDeleteAddress(addr.id)}
+                                            className="delete-address-btn"
+                                            title="Delete this address"
+                                            style={{ 
+                                                background: '#ff4444', 
+                                                color: 'white', 
+                                                border: 'none', 
+                                                padding: '0.5rem 1rem', 
+                                                borderRadius: '4px', 
+                                                cursor: 'pointer',
+                                                marginLeft: '0.5rem',
+                                                minWidth: '80px'
+                                            }}
+                                        >
+                                            Delete
+                                        </button>
                                     </div>
                                 ))}
                             </div>

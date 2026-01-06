@@ -10,6 +10,8 @@ import adminRoutes from './routes/admin.js';
 import categoryRoutes from './routes/categories.js';
 import reviewRoutes from './routes/reviews.js';
 import wishlistRoutes from './routes/wishlist.js';
+import inventoryRoutes from './routes/inventory.js';
+import uploadRoutes from './routes/upload.js';
 
 dotenv.config();
 
@@ -41,6 +43,8 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/wishlist', wishlistRoutes);
+app.use('/api/inventory', inventoryRoutes);
+app.use('/api/upload', uploadRoutes);
 
 app.get('/', (req, res) => {
     res.send('Jewellery-Cart API is running');
@@ -49,10 +53,10 @@ app.get('/', (req, res) => {
 // Error handling middleware
 app.use((err, req, res, next) => {
     console.error('Error:', err);
-    
+
     const statusCode = err.statusCode || 500;
     const message = err.message || 'Internal server error';
-    
+
     res.status(statusCode).json({
         success: false,
         message,
@@ -68,7 +72,7 @@ const startServer = async () => {
         const server = app.listen(PORT, () => {
             console.log(`Server running on port ${PORT}`);
         });
-        
+
         // Handle server errors
         server.on('error', (err) => {
             console.error('Server error:', err);

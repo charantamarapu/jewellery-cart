@@ -77,8 +77,16 @@ router.get('/', async (req, res) => {
         `;
         const products = await db.all(productsQuery, [...params, limitNum, offset]);
 
+        // Convert image buffers to base64 or use imageUrl
+        const productsWithImages = products.map(p => ({
+            ...p,
+            image: p.image ? p.image.toString('base64') : null,
+            imageType: p.imageType || 'image/jpeg',
+            imageUrl: p.imageUrl || null
+        }));
+
         res.json({
-            products: products || [],
+            products: productsWithImages || [],
             pagination: {
                 page: pageNum,
                 limit: limitNum,
@@ -102,7 +110,16 @@ router.get('/seller/my-products', authenticateToken, isSellerOrAdmin, async (req
         } else {
             products = await db.all('SELECT * FROM products WHERE sellerId = ?', [req.user.id]);
         }
-        res.json(products || []);
+
+        // Convert image buffers to base64
+        const productsWithImages = products.map(p => ({
+            ...p,
+            image: p.image ? p.image.toString('base64') : null,
+            imageType: p.imageType || 'image/jpeg',
+            imageUrl: p.imageUrl || null
+        }));
+
+        res.json(productsWithImages || []);
     } catch (err) {
         console.error('Get seller products error:', err);
         res.status(500).json({ message: 'Error fetching seller products', error: err.message });
@@ -125,8 +142,18 @@ router.get('/:id', async (req, res) => {
             WHERE p.id = ?
             GROUP BY p.id
         `, [req.params.id]);
-        
+
+
         if (!product) return res.status(404).json({ message: 'Product not found' });
+
+        // Convert image buffer to base64 and include type
+        if (product.image) {
+            product.image = product.image.toString('base64');
+            if (!product.imageType) {
+                product.imageType = 'image/jpeg';
+            }
+        }
+
         res.json(product);
     } catch (err) {
         console.error('Get product error:', err);
@@ -136,24 +163,41 @@ router.get('/:id', async (req, res) => {
 
 // Add product (Admin or Seller only)
 router.post('/', authenticateToken, isSellerOrAdmin, async (req, res) => {
-    const { name, price, description, image, stock, categoryId, images } = req.body;
+    const { name, price, description, image, imageType, imageUrl, stock, categoryId, images } = req.body;
     const db = getDB();
 
-    if (!name || !price || !image) {
-        return res.status(400).json({ message: 'Name, price, and image are required' });
+    if (!name || !price) {
+        return res.status(400).json({ message: 'Name and price are required' });
+    }
+
+    // Must have either image data or imageUrl
+    if (!image && !imageUrl) {
+        return res.status(400).json({ message: 'Either image data or image URL is required' });
     }
 
     try {
         const sellerId = req.user.role === 'seller' ? req.user.id : null;
         const productStock = stock !== undefined ? stock : 0;
         const imagesJSON = images ? JSON.stringify(images) : null;
-        
+
+        // Convert base64 to buffer if image data is provided
+        let imageBuffer = null;
+        if (image) {
+            imageBuffer = Buffer.from(image, 'base64');
+        }
+
         const result = await db.run(
-            'INSERT INTO products (name, price, description, image, stock, sellerId, categoryId, images) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-            [name, price, description || '', image, productStock, sellerId, categoryId || null, imagesJSON]
+            'INSERT INTO products (name, price, description, image, imageType, imageUrl, stock, sellerId, categoryId, images) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+            [name, price, description || '', imageBuffer, imageType || null, imageUrl || null, productStock, sellerId, categoryId || null, imagesJSON]
         );
 
         const newProduct = await db.get('SELECT * FROM products WHERE id = ?', [result.lastID]);
+
+        // Convert image buffer back to base64 for response
+        if (newProduct.image) {
+            newProduct.image = newProduct.image.toString('base64');
+        }
+
         res.status(201).json(newProduct);
     } catch (err) {
         console.error('Add product error:', err);
@@ -183,9 +227,9 @@ router.put('/:id', authenticateToken, isSellerOrAdmin, async (req, res) => {
         await db.run(
             'UPDATE products SET name = ?, price = ?, description = ?, image = ?, stock = ?, categoryId = ?, images = ? WHERE id = ?',
             [
-                name || product.name, 
-                price || product.price, 
-                description !== undefined ? description : product.description, 
+                name || product.name,
+                price || product.price,
+                description !== undefined ? description : product.description,
                 image || product.image,
                 stock !== undefined ? stock : product.stock,
                 categoryId !== undefined ? categoryId : product.categoryId,
@@ -219,7 +263,7 @@ router.delete('/:id', authenticateToken, isSellerOrAdmin, async (req, res) => {
         }
 
         await db.run('DELETE FROM products WHERE id = ?', [id]);
-        res.json({ message: 'Product deleted' });
+        res.json({ success: true, message: 'Product deleted' });
     } catch (err) {
         console.error('Delete product error:', err);
         res.status(500).json({ message: 'Error deleting product', error: err.message });

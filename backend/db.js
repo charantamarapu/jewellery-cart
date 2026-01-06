@@ -24,7 +24,7 @@ const dbGet = (sql, params = []) => {
 
 const dbRun = (sql, params = []) => {
     return new Promise((resolve, reject) => {
-        db.run(sql, params, function(err) {
+        db.run(sql, params, function (err) {
             if (err) reject(err);
             else resolve({ lastID: this.lastID, changes: this.changes });
         });
@@ -78,7 +78,9 @@ export const setupDB = async () => {
                             id INTEGER PRIMARY KEY AUTOINCREMENT,
                             name TEXT NOT NULL,
                             price REAL NOT NULL,
-                            image TEXT NOT NULL,
+                            image BLOB,
+                            imageType TEXT,
+                            imageUrl TEXT,
                             images TEXT DEFAULT '[]',
                             description TEXT,
                             stock INTEGER DEFAULT 0,
@@ -154,6 +156,33 @@ export const setupDB = async () => {
                             UNIQUE(userId, productId)
                         );
 
+                        CREATE TABLE IF NOT EXISTS jewelry_inventory (
+                            id INTEGER PRIMARY KEY AUTOINCREMENT,
+                            productId INTEGER,
+                            sellerId INTEGER NOT NULL,
+                            metal TEXT NOT NULL,
+                            metalPrice REAL NOT NULL,
+                            hallmarked INTEGER NOT NULL DEFAULT 0,
+                            purity REAL NOT NULL,
+                            netWeight REAL NOT NULL,
+                            extraDescription TEXT,
+                            extraWeight REAL DEFAULT 0,
+                            extraValue REAL DEFAULT 0,
+                            grossWeight REAL NOT NULL,
+                            type TEXT NOT NULL,
+                            ornament TEXT NOT NULL,
+                            customOrnament TEXT,
+                            wastagePercent REAL NOT NULL,
+                            makingChargePerGram REAL NOT NULL,
+                            totalMakingCharge REAL NOT NULL,
+                            totalPrice REAL NOT NULL,
+                            image TEXT,
+                            createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+                            updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+                            FOREIGN KEY (productId) REFERENCES products(id) ON DELETE CASCADE,
+                            FOREIGN KEY (sellerId) REFERENCES users(id)
+                        );
+
                         CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
                         CREATE INDEX IF NOT EXISTS idx_products_sellerId ON products(sellerId);
                         CREATE INDEX IF NOT EXISTS idx_products_categoryId ON products(categoryId);
@@ -164,6 +193,8 @@ export const setupDB = async () => {
                         CREATE INDEX IF NOT EXISTS idx_reviews_userId ON reviews(userId);
                         CREATE INDEX IF NOT EXISTS idx_wishlist_userId ON wishlist(userId);
                         CREATE INDEX IF NOT EXISTS idx_wishlist_productId ON wishlist(productId);
+                        CREATE INDEX IF NOT EXISTS idx_jewelry_inventory_sellerId ON jewelry_inventory(sellerId);
+                        CREATE INDEX IF NOT EXISTS idx_jewelry_inventory_productId ON jewelry_inventory(productId);
                     `);
 
                     // Check if we need to migrate data from db.json
@@ -202,6 +233,36 @@ export const setupDB = async () => {
                         }
                     }
 
+                    // Add image column to jewelry_inventory if it doesn't exist
+                    try {
+                        await dbExec("ALTER TABLE jewelry_inventory ADD COLUMN image TEXT");
+                        console.log('✅ Added image column to jewelry_inventory table');
+                    } catch (err) {
+                        if (!err.message.includes('duplicate column')) {
+                            console.warn('⚠️  Jewelry Inventory Image migration warning:', err.message);
+                        }
+                    }
+
+                    // Add imageType column to products if it doesn't exist
+                    try {
+                        await dbExec("ALTER TABLE products ADD COLUMN imageType TEXT");
+                        console.log('✅ Added imageType column to products table');
+                    } catch (err) {
+                        if (!err.message.includes('duplicate column')) {
+                            console.warn('⚠️  ImageType migration warning:', err.message);
+                        }
+                    }
+
+                    // Add imageUrl column to products if it doesn't exist
+                    try {
+                        await dbExec("ALTER TABLE products ADD COLUMN imageUrl TEXT");
+                        console.log('✅ Added imageUrl column to products table');
+                    } catch (err) {
+                        if (!err.message.includes('duplicate column')) {
+                            console.warn('⚠️  ImageUrl migration warning:', err.message);
+                        }
+                    }
+
                     await ensureSuperAdmin();
                     await seedDefaultCategories();
 
@@ -234,7 +295,7 @@ export const getDB = () => {
 const migrateFromJSON = async () => {
     try {
         const oldDbPath = path.join(__dirname, 'db.json');
-        
+
         if (!fs.existsSync(oldDbPath)) {
             console.log('No db.json found, skipping migration');
             return;

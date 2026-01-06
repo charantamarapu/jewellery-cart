@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useCart } from '../context/CartContext';
 import { Link } from 'react-router-dom';
+import { getProductImageSrc } from '../utils/imageUtils';
 import CategoryFilter from '../components/CategoryFilter';
 import ProductFilters from '../components/ProductFilters';
 import Pagination from '../components/Pagination';
@@ -37,7 +38,7 @@ const ProductList = () => {
             params.append('page', filters.page);
             params.append('limit', filters.limit);
 
-            const response = await fetch(`http://localhost:5000/api/products?${params}`);
+            const response = await fetch(`/api/products?${params}`);
             if (response.ok) {
                 const data = await response.json();
                 setProducts(data.products || []);
@@ -131,7 +132,7 @@ const ProductList = () => {
                                         {product.categoryName && (
                                             <span className="category-badge">{product.categoryName}</span>
                                         )}
-                                        <img src={product.image} alt={product.name} className="product-image" />
+                                        <img src={getProductImageSrc(product)} alt={product.name} className="product-image" />
                                         <div className="product-info">
                                             <h3>{product.name}</h3>
                                             {product.avgRating > 0 && (

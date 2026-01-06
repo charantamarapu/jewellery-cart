@@ -1,6 +1,9 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { useProducts } from '../context/ProductContext';
+import { getProductImageSrc } from '../utils/imageUtils';
+import ProductForm from '../components/ProductForm';
 import './SuperAdminPortal.css';
 
 const statusOptions = ['pending', 'processing', 'shipped', 'delivered', 'cancelled'];
@@ -8,19 +11,20 @@ const isSuperUser = (user) => user?.role === 'superadmin' || (user?.roles || [])
 
 const SuperAdminPortal = () => {
     const { user, logout } = useAuth();
+    const { products, addProduct, updateProduct, deleteProduct } = useProducts();
     const navigate = useNavigate();
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [overview, setOverview] = useState(null);
     const [users, setUsers] = useState([]);
     const [orders, setOrders] = useState([]);
-    const [inventory, setInventory] = useState([]);
     const [savingUserId, setSavingUserId] = useState(null);
     const [savingOrderId, setSavingOrderId] = useState(null);
-    const [savingProductId, setSavingProductId] = useState(null);
-    const [newProduct, setNewProduct] = useState({ name: '', price: '', description: '', image: '', stock: '' });
-    const [editingId, setEditingId] = useState(null);
-    const [editData, setEditData] = useState({ name: '', price: '', description: '', image: '', stock: '' });
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [message, setMessage] = useState({ type: '', text: '' });
+    const [showProductForm, setShowProductForm] = useState(false);
+    const [editingProduct, setEditingProduct] = useState(null);
+    const [editFormData, setEditFormData] = useState(null);
 
     const headers = useMemo(() => {
         const token = localStorage.getItem('token');
@@ -42,29 +46,25 @@ const SuperAdminPortal = () => {
         setLoading(true);
         setError('');
         try {
-            const [overviewRes, usersRes, ordersRes, inventoryRes] = await Promise.all([
+            const [overviewRes, usersRes, ordersRes] = await Promise.all([
                 fetch('/api/admin/overview', { headers }),
                 fetch('/api/admin/users', { headers }),
-                fetch('/api/admin/orders', { headers }),
-                fetch('/api/admin/inventory', { headers })
+                fetch('/api/admin/orders', { headers })
             ]);
 
             if (!overviewRes.ok) throw new Error('Failed to load overview');
             if (!usersRes.ok) throw new Error('Failed to load users');
             if (!ordersRes.ok) throw new Error('Failed to load orders');
-            if (!inventoryRes.ok) throw new Error('Failed to load inventory');
 
-            const [overviewData, usersData, ordersData, inventoryData] = await Promise.all([
+            const [overviewData, usersData, ordersData] = await Promise.all([
                 overviewRes.json(),
                 usersRes.json(),
-                ordersRes.json(),
-                inventoryRes.json()
+                ordersRes.json()
             ]);
 
             setOverview(overviewData);
             setUsers(usersData);
             setOrders(ordersData);
-            setInventory(inventoryData);
         } catch (err) {
             setError(err.message);
         } finally {
@@ -85,7 +85,6 @@ const SuperAdminPortal = () => {
             if (!res.ok) throw new Error(data.message || 'Failed to update role');
             setUsers((prev) => prev.map((u) => (u.id === userId ? data : u)));
             
-            // If current user's role was changed, force re-login
             if (user.id === userId) {
                 alert('Your role has been changed. Please log in again.');
                 logout();
@@ -138,91 +137,196 @@ const SuperAdminPortal = () => {
         }
     };
 
-    const createProduct = async () => {
-        if (!newProduct.name || !newProduct.price) {
-            setError('Name and price are required');
-            return;
-        }
-        setSavingProductId('new');
-        setError('');
+    // Fetch product + inventory data for editing
+    const handleEditClick = async (product) => {
         try {
-            const res = await fetch('/api/products', {
-                method: 'POST',
-                headers,
-                body: JSON.stringify({
-                    ...newProduct,
-                    price: Number(newProduct.price),
-                    image: newProduct.image || 'https://via.placeholder.com/150'
-                })
-            });
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.message || 'Failed to create product');
-            setNewProduct({ name: '', price: '', description: '', image: '', stock: '' });
-            setInventory((prev) => [data, ...prev]);
+            setMessage({ type: '', text: '' });
+
+            // Fetch inventory details for this product
+            const invResponse = await fetch(`/api/inventory/product/${product.id}`);
+            const invData = await invResponse.json();
+
+            const inventory = invData.success && invData.item ? invData.item : {};
+
+            // Combine product and inventory data
+            const formData = {
+                name: product.name,
+                description: product.description,
+                image: product.imageUrl || product.image || '',
+                price: product.price,
+                stock: product.stock || 0,
+                // Jewelry specs from inventory
+                metal: inventory.metal || '',
+                metalPrice: inventory.metalPrice || 0,
+                hallmarked: inventory.hallmarked === 1,
+                purity: inventory.purity ? String(inventory.purity) : '',
+                netWeight: inventory.netWeight ? String(inventory.netWeight) : '',
+                extraDescription: inventory.extraDescription || '',
+                extraWeight: inventory.extraWeight ? String(inventory.extraWeight) : '',
+                extraValue: inventory.extraValue ? String(inventory.extraValue) : '',
+                grossWeight: inventory.grossWeight ? String(inventory.grossWeight) : '',
+                type: inventory.type || 'Normal',
+                ornament: inventory.ornament || '',
+                customOrnament: inventory.customOrnament || '',
+                wastagePercent: inventory.wastagePercent ? String(inventory.wastagePercent) : '10',
+                makingChargePerGram: inventory.makingChargePerGram ? String(inventory.makingChargePerGram) : '',
+                inventoryImage: inventory.image || ''
+            };
+
+            setEditingProduct(product);
+            setEditFormData(formData);
+            setShowProductForm(true);
         } catch (err) {
-            setError(err.message);
-        } finally {
-            setSavingProductId(null);
+            console.error('Error fetching product data:', err);
+            setMessage({ type: 'error', text: 'Failed to load product data for editing' });
         }
     };
 
-    const startEdit = (product) => {
-        setEditingId(product.id);
-        setEditData({
-            name: product.name || '',
-            price: product.price || '',
-            description: product.description || '',
-            image: product.image || '',
-            stock: product.stock !== undefined ? product.stock : 0
-        });
-    };
-
-    const saveEdit = async (productId) => {
-        if (!editData.name || !editData.price) {
-            setError('Name and price are required');
-            return;
-        }
-        setSavingProductId(productId);
-        setError('');
+    const handleProductSubmit = async (productData) => {
         try {
-            const res = await fetch(`/api/products/${productId}`, {
-                method: 'PUT',
-                headers,
-                body: JSON.stringify({
-                    ...editData,
-                    price: Number(editData.price)
-                })
-            });
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.message || 'Failed to update product');
-            setInventory((prev) => prev.map((p) => (p.id === productId ? data : p)));
-            setEditingId(null);
-        } catch (err) {
-            setError(err.message);
-        } finally {
-            setSavingProductId(null);
-        }
-    };
+            setIsSubmitting(true);
+            setMessage({ type: '', text: '' });
 
-    const deleteProduct = async (productId) => {
-        if (!window.confirm('Delete this product?')) return;
-        setSavingProductId(productId);
-        setError('');
-        try {
-            const res = await fetch(`/api/products/${productId}`, {
-                method: 'DELETE',
-                headers
-            });
-            if (!res.ok) {
-                const data = await res.json();
-                throw new Error(data.message || 'Failed to delete product');
+            if (editingProduct) {
+                // UPDATE existing product
+                const result = await updateProduct(editingProduct.id, {
+                    name: productData.name,
+                    description: productData.description,
+                    price: productData.price,
+                    image: productData.image,
+                    stock: productData.stock
+                });
+
+                if (result.success) {
+                    // Check if inventory exists and update or create
+                    const invCheckResponse = await fetch(`/api/inventory/product/${editingProduct.id}`);
+                    const invCheckData = await invCheckResponse.json();
+
+                    if (invCheckData.success && invCheckData.item) {
+                        // Update existing inventory
+                        const inventoryResponse = await fetch(`/api/inventory/${invCheckData.item.id}`, {
+                            method: 'PUT',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${localStorage.getItem('token')}`
+                            },
+                            body: JSON.stringify({
+                                metal: productData.metal,
+                                metalPrice: productData.metalPrice,
+                                hallmarked: productData.hallmarked,
+                                purity: productData.purity,
+                                netWeight: productData.netWeight,
+                                extraDescription: productData.extraDescription,
+                                extraWeight: productData.extraWeight,
+                                extraValue: productData.extraValue,
+                                grossWeight: productData.grossWeight,
+                                type: productData.type,
+                                ornament: productData.ornament,
+                                customOrnament: productData.customOrnament,
+                                wastagePercent: productData.wastagePercent,
+                                makingChargePerGram: productData.makingChargePerGram
+                            })
+                        });
+                        setMessage({ type: 'success', text: 'Product updated successfully!' });
+                    } else {
+                        setMessage({ type: 'success', text: 'Product updated successfully!' });
+                    }
+                } else {
+                    setMessage({ type: 'error', text: result.message || 'Failed to update product' });
+                }
+            } else {
+                // CREATE new product
+                const result = await addProduct({
+                    name: productData.name,
+                    description: productData.description,
+                    price: productData.price,
+                    image: productData.image || 'https://via.placeholder.com/150',
+                    stock: productData.stock
+                });
+
+                if (result.success) {
+                    // Try to add inventory if jewelry specs provided
+                    if (productData.metal && productData.netWeight && productData.grossWeight) {
+                        const inventoryResponse = await fetch('/api/inventory/add', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${localStorage.getItem('token')}`
+                            },
+                            body: JSON.stringify({
+                                productId: result.productId,
+                                metal: productData.metal,
+                                metalPrice: productData.metalPrice,
+                                hallmarked: productData.hallmarked,
+                                purity: productData.purity,
+                                netWeight: productData.netWeight,
+                                extraDescription: productData.extraDescription,
+                                extraWeight: productData.extraWeight || 0,
+                                extraValue: productData.extraValue || 0,
+                                grossWeight: productData.grossWeight,
+                                type: productData.type,
+                                ornament: productData.ornament,
+                                customOrnament: productData.customOrnament,
+                                wastagePercent: productData.wastagePercent,
+                                makingChargePerGram: productData.makingChargePerGram,
+                                totalMakingCharge: 0,
+                                totalPrice: productData.price
+                            })
+                        });
+
+                        const inventoryResult = await inventoryResponse.json();
+
+                        if (inventoryResult.success) {
+                            setMessage({ type: 'success', text: 'Product created successfully with all specifications!' });
+                        } else {
+                            setMessage({ type: 'warning', text: 'Product created but inventory details failed. Please add inventory separately.' });
+                        }
+                    } else {
+                        setMessage({ type: 'success', text: 'Product created successfully!' });
+                    }
+                } else {
+                    setMessage({ type: 'error', text: result.message || 'Failed to create product' });
+                }
             }
-            setInventory((prev) => prev.filter((p) => p.id !== productId));
-            if (editingId === productId) setEditingId(null);
+
+            setShowProductForm(false);
         } catch (err) {
-            setError(err.message);
+            setMessage({ type: 'error', text: err.message || 'Error saving product' });
+            console.error('Error submitting product:', err);
         } finally {
-            setSavingProductId(null);
+            setIsSubmitting(false);
+        }
+    };
+
+    const handleCancelForm = () => {
+        setShowProductForm(false);
+        setEditingProduct(null);
+        setEditFormData(null);
+    };
+
+    const handleDeleteProduct = async (id) => {
+        if (!window.confirm('Are you sure you want to delete this product and all its inventory details?')) return;
+
+        try {
+            const result = await deleteProduct(id);
+            if (result.success) {
+                try {
+                    const response = await fetch(`/api/inventory/product/${id}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'Authorization': `Bearer ${localStorage.getItem('token')}`
+                        }
+                    });
+                    const invResult = await response.json();
+                } catch (err) {
+                    // Inventory deletion might fail if no inventory exists, which is ok
+                }
+                setMessage({ type: 'success', text: 'Product deleted successfully!' });
+            } else {
+                setMessage({ type: 'error', text: result.message || 'Failed to delete product' });
+            }
+        } catch (err) {
+            setMessage({ type: 'error', text: err.message || 'Error deleting product' });
         }
     };
 
@@ -246,6 +350,11 @@ const SuperAdminPortal = () => {
             </header>
 
             {error && <div className="card error">{error}</div>}
+            {message.text && (
+                <div className={`card ${message.type}`}>
+                    {message.text}
+                </div>
+            )}
 
             {overview && (
                 <div className="grid stats">
@@ -366,93 +475,76 @@ const SuperAdminPortal = () => {
                 </div>
             </div>
 
-            <div className="card">
-                <div className="section-header">
+            <div className="card admin-products-section">
+                <div className="section-header-row">
                     <div>
                         <p className="eyebrow">Inventory</p>
-                        <h3>Products</h3>
+                        <h3>💎 All Products</h3>
                     </div>
-                    <button className="ghost" onClick={bootstrap}>Refresh</button>
+                    <button
+                        className="ghost"
+                        onClick={() => {
+                            if (showProductForm && !editingProduct) {
+                                handleCancelForm();
+                            } else {
+                                setEditingProduct(null);
+                                setEditFormData(null);
+                                setShowProductForm(true);
+                            }
+                        }}
+                    >
+                        {showProductForm && !editingProduct ? 'Cancel' : '+ Add New Product'}
+                    </button>
                 </div>
-                <div className="inventory-grid">
-                    {inventory.map((product) => (
-                        <div key={product.id} className="inventory-card">
-                            <div className="inventory-meta">
-                                <p className="muted small">#{product.id}</p>
-                                {product.sellerName && (
-                                    <p className="muted small">Seller: {product.sellerName} ({product.sellerEmail || '—'})</p>
-                                )}
-                            </div>
-                            {editingId === product.id ? (
-                                <div className="edit-block">
-                                    <input
-                                        type="text"
-                                        placeholder="Name"
-                                        value={editData.name}
-                                        onChange={(e) => setEditData({ ...editData, name: e.target.value })}
-                                    />
-                                    <input
-                                        type="number"
-                                        placeholder="Price"
-                                        value={editData.price}
-                                        onChange={(e) => setEditData({ ...editData, price: e.target.value })}
-                                    />
-                                    <input
-                                        type="number"
-                                        placeholder="Stock"
-                                        value={editData.stock}
-                                        onChange={(e) => setEditData({ ...editData, stock: e.target.value })}
-                                    />
-                                    <input
-                                        type="text"
-                                        placeholder="Image URL"
-                                        value={editData.image}
-                                        onChange={(e) => setEditData({ ...editData, image: e.target.value })}
-                                    />
-                                    <textarea
-                                        placeholder="Description"
-                                        value={editData.description}
-                                        onChange={(e) => setEditData({ ...editData, description: e.target.value })}
-                                    />
-                                    <div className="inline-actions">
+
+                {showProductForm && (
+                    <div className="form-container">
+                        <h4>{editingProduct ? `✏️ Editing: ${editingProduct.name}` : '➕ Add New Product'}</h4>
+                        <ProductForm
+                            onSubmit={handleProductSubmit}
+                            initialData={editFormData}
+                            isLoading={isSubmitting}
+                            onCancel={handleCancelForm}
+                        />
+                    </div>
+                )}
+
+                <div className="products-list">
+                    {products.length === 0 ? (
+                        <p className="no-products">No products yet.</p>
+                    ) : (
+                        <div className="product-grid">
+                            {products.map(product => (
+                                <div key={product.id} className="product-card">
+                                    <div className="product-image">
+                                        <img src={getProductImageSrc(product)} alt={product.name} />
+                                    </div>
+                                    <div className="product-details">
+                                        <h4>{product.name}</h4>
+                                        <p className="product-price">₹{product.price.toFixed(2)}</p>
+                                        <p className="product-description">{product.description?.substring(0, 100) || 'No description'}...</p>
+                                        {product.sellerId && (
+                                            <span className="seller-badge">👤 Seller Product</span>
+                                        )}
+                                    </div>
+                                    <div className="product-actions">
                                         <button
-                                            onClick={() => saveEdit(product.id)}
-                                            disabled={savingProductId === product.id}
+                                            onClick={() => handleEditClick(product)}
+                                            className="edit-product-btn"
                                         >
-                                            {savingProductId === product.id ? 'Saving...' : 'Save'}
+                                            ✏️ Edit
                                         </button>
-                                        <button className="ghost" onClick={() => setEditingId(null)}>
-                                            Cancel
+                                        <button
+                                            onClick={() => handleDeleteProduct(product.id)}
+                                            className="delete-product-btn"
+                                        >
+                                            🗑️ Delete
                                         </button>
                                     </div>
                                 </div>
-                            ) : (
-                                <>
-                                    <h4>{product.name}</h4>
-                                    <p className="muted">{product.description || 'No description provided.'}</p>
-                                    <div className="inventory-footer">
-                                        <span className="pill">₹{Number(product.price || 0).toFixed(2)}</span>
-                                        <span className={`stock-badge ${product.stock > 10 ? 'in-stock' : product.stock > 0 ? 'low-stock' : 'out-of-stock'}`}>
-                                            Stock: {product.stock || 0}
-                                        </span>
-                                    </div>
-                                    <div className="inventory-footer">
-                                        <span className="muted small">Added {new Date(product.createdAt).toLocaleDateString()}</span>
-                                    </div>
-                                    <div className="inline-actions">
-                                        <button className="ghost" onClick={() => startEdit(product)}>Edit</button>
-                                        <button
-                                            className="ghost danger"
-                                            onClick={() => deleteProduct(product.id)}
-                                            disabled={savingProductId === product.id}
-                                        >
-                                            {savingProductId === product.id ? 'Deleting...' : 'Delete'}
-                                        </button>
-                                    </div>
-                                </>
-                            )}
+                            ))}
                         </div>
-                    ))}
+                    )}
                 </div>
             </div>
         </section>

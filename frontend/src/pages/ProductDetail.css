@@ -8,6 +8,31 @@
     padding: 2rem 1.5rem;
 }
 
+/* Loading State */
+.loading-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 300px;
+    gap: 1rem;
+}
+
+.loading-spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid var(--border);
+    border-top-color: var(--primary);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
 .detail-container {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -20,6 +45,12 @@
 }
 
 /* Image Section */
+.detail-image-section {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
 .detail-image {
     display: flex;
     align-items: center;
@@ -40,6 +71,36 @@
     transform: scale(1.02);
 }
 
+/* Image Thumbnails */
+.image-thumbnails {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.thumbnail {
+    width: 70px;
+    height: 70px;
+    padding: 4px;
+    border: 2px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--white);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.thumbnail:hover,
+.thumbnail.active {
+    border-color: var(--primary);
+}
+
+.thumbnail img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 4px;
+}
+
 /* Info Section */
 .detail-info h1 {
     font-family: var(--font-heading);
@@ -53,8 +114,56 @@
 .detail-price {
     font-size: 2rem;
     color: var(--primary);
-    margin-bottom: 1.5rem;
+    margin-bottom: 1rem;
     font-weight: 700;
+}
+
+/* Stock Badge */
+.stock-badge {
+    display: inline-block;
+    padding: 0.4rem 0.8rem;
+    border-radius: var(--radius-xl);
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+}
+
+.stock-in {
+    background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+    color: #155724;
+}
+
+.stock-low {
+    background: linear-gradient(135deg, #fff3cd 0%, #ffeeba 100%);
+    color: #856404;
+}
+
+.stock-out {
+    background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+    color: #721c24;
+}
+
+/* Rating Summary */
+.rating-summary {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    font-size: 0.95rem;
+}
+
+.rating-summary .stars {
+    color: #f5a623;
+    font-size: 1.1rem;
+}
+
+.rating-summary .rating-value {
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.rating-summary .review-count {
+    color: var(--text-secondary);
 }
 
 .detail-description {
@@ -64,6 +173,7 @@
     margin-bottom: 2rem;
     padding-top: 1.5rem;
     border-top: 1px solid var(--border);
+    white-space: pre-wrap;
 }
 
 /* Add to Cart Button */
@@ -81,14 +191,174 @@
     box-shadow: var(--shadow-sm);
 }
 
-.add-to-cart-lg:hover {
+.add-to-cart-lg:hover:not(.disabled) {
     background: linear-gradient(135deg, var(--primary-hover) 0%, var(--primary-dark) 100%);
     box-shadow: var(--shadow-hover);
     transform: translateY(-2px);
 }
 
-.add-to-cart-lg:active {
+.add-to-cart-lg:active:not(.disabled) {
     transform: translateY(0);
+}
+
+.add-to-cart-lg.disabled {
+    background: #ccc;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+.cart-qty-info {
+    margin-top: 0.75rem;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+/* ===================================
+   SPECIFICATIONS SECTION
+   =================================== */
+.specifications-section {
+    margin-top: 2rem;
+    background: var(--white);
+    padding: 2rem;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border);
+}
+
+.specifications-section h2 {
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+.specs-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2rem;
+}
+
+.spec-group {
+    background: var(--bg-light);
+    padding: 1.5rem;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+}
+
+.spec-group h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 2px solid var(--primary);
+}
+
+.spec-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 0;
+    border-bottom: 1px dashed var(--border);
+}
+
+.spec-item:last-child {
+    border-bottom: none;
+}
+
+.spec-item.total {
+    margin-top: 0.5rem;
+    padding-top: 0.75rem;
+    border-top: 2px solid var(--border);
+    border-bottom: none;
+}
+
+.spec-label {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+.spec-value {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.spec-item.total .spec-label,
+.spec-item.total .spec-value {
+    font-size: 1.05rem;
+    color: var(--primary);
+}
+
+.hallmark-badge {
+    font-size: 0.7rem;
+    background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+    color: #155724;
+    padding: 0.15rem 0.4rem;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+}
+
+/* Reviews Section */
+.reviews-section {
+    margin-top: 3rem;
+    background: var(--white);
+    padding: 2rem;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border);
+}
+
+.reviews-section h2 {
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
+    color: var(--text-primary);
+}
+
+.no-reviews {
+    color: var(--text-secondary);
+    font-style: italic;
+}
+
+.reviews-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.review-card {
+    padding: 1rem;
+    background: var(--bg-light);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+}
+
+.review-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.review-author {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.review-stars {
+    color: #f5a623;
+}
+
+.review-comment {
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin-bottom: 0.5rem;
+}
+
+.review-date {
+    font-size: 0.8rem;
+    color: var(--text-muted);
 }
 
 /* Responsive */
@@ -115,4 +385,25 @@
         width: 100%;
         padding: 1rem;
     }
+
+    .image-thumbnails {
+        justify-content: center;
+    }
+}
+
+/* Inventory Image */
+.spec-image-container {
+    text-align: center;
+    margin-bottom: 2rem;
+    padding: 1rem;
+    background: var(--bg-light);
+    border-radius: var(--radius-sm);
+    border: 1px dashed var(--border);
+}
+
+.spec-image {
+    max-width: 100%;
+    max-height: 400px;
+    object-fit: contain;
+    border-radius: 4px;
 }

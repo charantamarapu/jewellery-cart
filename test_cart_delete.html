@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Cart Delete</title>
+</head>
+<body>
+    <h1>Cart Delete Test</h1>
+    <div id="status"></div>
+    
+    <script>
+        // Simulate the cart removal logic
+        function testCartRemoval() {
+            const status = document.getElementById('status');
+            
+            // Test 1: Confirmation dialog
+            const itemName = "Test Product";
+            const confirmed = window.confirm(`Remove "${itemName}" from your cart?`);
+            
+            if (confirmed) {
+                status.innerHTML += '<p>✅ Confirmation dialog worked - User clicked OK</p>';
+                
+                // Test 2: Remove from cart
+                let cart = [
+                    { id: 1, name: "Test Product", price: 100 },
+                    { id: 2, name: "Another Product", price: 200 }
+                ];
+                
+                const idToRemove = 1;
+                const newCart = cart.filter(item => item.id !== idToRemove);
+                
+                status.innerHTML += `<p>Original cart length: ${cart.length}</p>`;
+                status.innerHTML += `<p>New cart length: ${newCart.length}</p>`;
+                
+                if (newCart.length === cart.length - 1) {
+                    status.innerHTML += '<p>✅ Filter logic works correctly</p>';
+                } else {
+                    status.innerHTML += '<p>❌ Filter logic FAILED</p>';
+                }
+                
+                // Test 3: localStorage
+                localStorage.setItem('cart', JSON.stringify(newCart));
+                const retrieved = JSON.parse(localStorage.getItem('cart'));
+                
+                if (retrieved.length === newCart.length) {
+                    status.innerHTML += '<p>✅ localStorage works correctly</p>';
+                } else {
+                    status.innerHTML += '<p>❌ localStorage FAILED</p>';
+                }
+                
+            } else {
+                status.innerHTML += '<p>❌ User clicked Cancel</p>';
+            }
+        }
+        
+        // Run test on page load
+        setTimeout(testCartRemoval, 500);
+    </script>
+</body>
+</html>
