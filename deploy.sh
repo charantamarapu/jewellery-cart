@@ -1,0 +1,29 @@
+#!/bin/bash
+
+# Fast Deployment Script (Run this for every update)
+set -e
+
+echo "🚀 Starting Deployment Update..."
+
+# 1. Pull latest changes
+echo "📥 Pulling Code from Git..."
+git pull
+
+# 2. Backend Updates
+echo "📦 Updating Backend..."
+cd backend
+npm install
+cd ..
+
+# 3. Frontend Updates
+echo "🏗 Building Frontend..."
+cd frontend
+npm install
+npm run build
+cd ..
+
+# 4. Restart Application
+echo "🔄 Restarting Server..."
+pm2 restart jewellery-cart
+
+echo "✅ Deployment Complete! App is updated."
