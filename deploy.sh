@@ -5,6 +5,10 @@ set -e
 
 echo "🚀 Starting Deployment Update..."
 
+# 0. Fix Permissions (Crucial if previous runs were sudo)
+echo "🔒 Fixing Permissions..."
+sudo chown -R $USER:$USER .
+
 # 1. Pull latest changes
 echo "📥 Pulling Code from Git..."
 git pull
