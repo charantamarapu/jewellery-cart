@@ -81,7 +81,7 @@ scp -i path/to/key.key -r d:/jewellery-cart ubuntu@<YOUR_IP>:~/jewellery-cart
 
 ## 🚀 Step 5: Run the Deployment Script
 
-We have prepared a script to automate the installation of Node.js, dependencies, and building the project.
+We have prepared a script to automate the installation of Node.js, dependencies, building the project, and configuring Nginx (web server).
 
 1.  Navigate to the project folder on the server:
     ```bash
@@ -95,71 +95,31 @@ We have prepared a script to automate the installation of Node.js, dependencies,
     ```
 
     *This script will:*
-    *   Install Node.js 20.
-    *   Install PM2 (Process Manager).
-    *   Install project dependencies.
-    *   Build the Frontend.
-    *   Start the server using PM2.
-
-3.  **Open the detailed firewall (on the server itself):**
-    Oracle Cloud also has a firewall on the Ubuntu instance (iptables/netfilter). You often need to allow the port there too.
-    ```bash
-    sudo iptables -I INPUT 6 -m state --state NEW -p tcp --dport 5000 -j ACCEPT
-    sudo netfilter-persistent save
-    ```
-    *Or if using UFW:*
-    ```bash
-    sudo ufw allow 5000/tcp
-    ```
+    *   Install Node.js 20 & PM2.
+    *   Install & Build the application.
+    *   **Install & Configure Nginx** (Reverse Proxy).
+    *   Setup the Ubuntu Firewall (Port 80/443).
 
 ---
 
 ## 🌐 Step 6: Verify Deployment
 
-Open your browser and visit:
-`http://<YOUR_INSTANCE_PUBLIC_IP>:5000`
+Open your browser and visit your IP:
+`http://140.245.255.141`
 
 You should see your Jewellery Cart application running!
 
 ---
 
-## 🔒 Optional: Setup Nginx & SSL (Recommended for Production)
+## 🔒 Optional: Setup SSL (HTTPS)
 
-Running on port 5000 is fine for testing, but typically you want standard port 80/443.
+For production, you should add an SSL certificate using Certbot (LetsEncrypt).
 
-1.  **Install Nginx**:
-    ```bash
-    sudo apt install nginx -y
-    ```
-2.  **Create Config**:
-    ```bash
-    sudo nano /etc/nginx/sites-available/jewellery-cart
-    ```
-3.  **Paste Configuration**:
-    ```nginx
-    server {
-        listen 80;
-        server_name <YOUR_INSTANCE_IP_OR_DOMAIN>;
-
-        location / {
-            proxy_pass http://localhost:5000;
-            proxy_http_version 1.1;
-            proxy_set_header Upgrade $http_upgrade;
-            proxy_set_header Connection 'upgrade';
-            proxy_set_header Host $host;
-            proxy_cache_bypass $http_upgrade;
-        }
-    }
-    ```
-4.  **Activate & Restart**:
-    ```bash
-    sudo ln -s /etc/nginx/sites-available/jewellery-cart /etc/nginx/sites-enabled/
-    sudo rm /etc/nginx/sites-enabled/default
-    sudo nginx -t
-    sudo systemctl restart nginx
-    ```
-5.  **Allow Port 80**:
-    Make sure to add Port `80` to your **Security List** and **iptables** (Step 2 and Step 5).
+```bash
+sudo apt install certbot python3-certbot-nginx
+sudo certbot --nginx -d 140.245.255.141
+```
+*(Note: LetsEncrypt usually requires a domain name, not just an IP. If you buy a domain, point it to this IP).*
 
 ---
 
