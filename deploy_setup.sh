@@ -91,12 +91,17 @@ if command -v ufw &> /dev/null; then
     echo "UFW rules added."
 fi
 
-# Iptables catch-all for Oracle Cloud images that don't always use UFW by default in the way we expect
+# Iptables catch-all for Oracle Cloud images
 if command -v iptables &> /dev/null; then
-    # Insert rule at top to ensure it's not blocked by a DROP all rule later
-    iptables -I INPUT 6 -m state --state NEW -p tcp --dport 80 -j ACCEPT
-    iptables -I INPUT 6 -m state --state NEW -p tcp --dport 443 -j ACCEPT
-    netfilter-persistent save || echo "netfilter-persistent not found, ignoring..."
+    # Install persistent saver (Non-interactive to avoid prompts)
+    export DEBIAN_FRONTEND=noninteractive
+    apt install -y iptables-persistent netfilter-persistent
+    
+    # Insert rule at TOP (1) to ensure it's not blocked by later DROP rules
+    iptables -I INPUT 1 -m state --state NEW -p tcp --dport 80 -j ACCEPT
+    iptables -I INPUT 1 -m state --state NEW -p tcp --dport 443 -j ACCEPT
+    
+    netfilter-persistent save
 fi
 
 echo "✅ Deployment Setup Complete!"
