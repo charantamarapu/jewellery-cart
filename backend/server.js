@@ -12,6 +12,11 @@ import reviewRoutes from './routes/reviews.js';
 import wishlistRoutes from './routes/wishlist.js';
 import inventoryRoutes from './routes/inventory.js';
 import uploadRoutes from './routes/upload.js';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 dotenv.config();
 
@@ -46,8 +51,21 @@ app.use('/api/wishlist', wishlistRoutes);
 app.use('/api/inventory', inventoryRoutes);
 app.use('/api/upload', uploadRoutes);
 
-app.get('/', (req, res) => {
+// Serve static files from frontend build
+app.use(express.static(path.join(__dirname, '../frontend/dist')));
+
+// Serve API status on specific endpoint (optional, good for health checks)
+app.get('/api/health', (req, res) => {
     res.send('Jewellery-Cart API is running');
+});
+
+// All other routes return index.html for SPA
+app.get('*', (req, res, next) => {
+    // Skip API routes that fell through (should have been caught by 404 handler if we had one, but strict SPA routing usually claims all)
+    if (req.path.startsWith('/api')) {
+        return next();
+    }
+    res.sendFile(path.join(__dirname, '../frontend/dist/index.html'));
 });
 
 // Error handling middleware
