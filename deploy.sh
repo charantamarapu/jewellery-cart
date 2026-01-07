@@ -28,6 +28,7 @@ cd ..
 
 # 4. Restart Application
 echo "🔄 Restarting Server..."
-pm2 restart jewellery-cart
+# Use 'start' or 'reload' with config file which handles both starting new and restarting existing
+pm2 start ecosystem.config.cjs --env production
 
 echo "✅ Deployment Complete! App is updated."
