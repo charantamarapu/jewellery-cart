@@ -63,19 +63,28 @@ ssh -i path/to/your/key.key ubuntu@<YOUR_INSTANCE_PUBLIC_IP>
 You can either clone the repository from GitHub (recommended) or upload the files manually.
 
 ### Option A: Via Git (Recommended)
-1. Push your local code to GitHub/GitLab.
-2. On the server:
-   ```bash
-   git clone https://github.com/your-username/jewellery-cart.git
-   cd jewellery-cart
-   ```
 
-### Option B: Via SCP (Manual Upload)
-From your local machine:
+**1. On your Local Machine (VS Code):**
+You need to save your changes and send them to GitHub first.
 ```bash
-# Upload the current folder to server
-scp -i path/to/key.key -r d:/jewellery-cart ubuntu@<YOUR_IP>:~/jewellery-cart
+# Add all new deployment files
+git add .
+git commit -m "Prepared for Oracle Cloud Deployment"
+git push origin main
 ```
+
+**2. On the Oracle Cloud Server:**
+Connect to your instance via SSH, then run:
+
+```bash
+# Clone your repository
+git clone https://github.com/charantamarapu/jewellery-cart.git
+
+# Enter the directory
+cd jewellery-cart
+```
+
+*Note: If your repository is Private, you will be asked for a username and password. For the password, you must use a GitHub Personal Access Token, not your account password.*
 
 ---
 
