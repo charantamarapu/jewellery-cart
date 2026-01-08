@@ -13,6 +13,8 @@ const Checkout = () => {
     const [selectedAddressId, setSelectedAddressId] = useState(null);
     const [showAddForm, setShowAddForm] = useState(false);
     const [isAddingAddress, setIsAddingAddress] = useState(false);
+    const [paymentMethod, setPaymentMethod] = useState('online'); // 'online' or 'cod'
+    const [paymentError, setPaymentError] = useState(null);
     const [address, setAddress] = useState({
         fullName: '',
         addressLine1: '',
@@ -93,8 +95,102 @@ const Checkout = () => {
         }
     };
 
+    const initiateRazorpayPayment = async (orderData) => {
+        const token = localStorage.getItem('token');
+
+        try {
+            // Create Razorpay order
+            const paymentResponse = await fetch('/api/payments/create-order', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    amount: cartTotal,
+                    orderId: orderData.id
+                })
+            });
+
+            if (!paymentResponse.ok) {
+                const errorData = await paymentResponse.json();
+                if (errorData.configurationRequired) {
+                    throw new Error('Online payments are not configured yet. Please use Cash on Delivery or contact support.');
+                }
+                throw new Error(errorData.message || 'Failed to create payment order');
+            }
+
+            const paymentData = await paymentResponse.json();
+
+            // Open Razorpay checkout
+            const options = {
+                key: paymentData.keyId,
+                amount: paymentData.amount,
+                currency: paymentData.currency,
+                name: 'Jewellery Cart',
+                description: 'Order Payment',
+                order_id: paymentData.orderId,
+                handler: async function (response) {
+                    // Verify payment on backend
+                    try {
+                        const verifyResponse = await fetch('/api/payments/verify', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${token}`
+                            },
+                            body: JSON.stringify({
+                                razorpay_order_id: response.razorpay_order_id,
+                                razorpay_payment_id: response.razorpay_payment_id,
+                                razorpay_signature: response.razorpay_signature,
+                                orderId: orderData.id
+                            })
+                        });
+
+                        if (verifyResponse.ok) {
+                            alert('Payment successful! Your order has been confirmed.');
+                            clearCart();
+                            navigate('/');
+                        } else {
+                            setPaymentError('Payment verification failed. Please contact support.');
+                        }
+                    } catch (err) {
+                        console.error('Verification error:', err);
+                        setPaymentError('Payment verification failed. Please contact support.');
+                    }
+                },
+                prefill: {
+                    name: user?.name || '',
+                    email: user?.email || ''
+                },
+                theme: {
+                    color: '#d4af37'
+                },
+                modal: {
+                    ondismiss: function () {
+                        setIsSubmitting(false);
+                        setPaymentError('Payment was cancelled. Your order is saved as pending.');
+                    }
+                }
+            };
+
+            const razorpay = new window.Razorpay(options);
+            razorpay.on('payment.failed', function (response) {
+                setPaymentError(`Payment failed: ${response.error.description}`);
+                setIsSubmitting(false);
+            });
+            razorpay.open();
+
+        } catch (error) {
+            console.error('Payment initiation error:', error);
+            setPaymentError('Failed to initiate payment. Please try again.');
+            setIsSubmitting(false);
+        }
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
+        setPaymentError(null);
 
         if (!user) {
             alert('Please sign in to place an order');
@@ -117,31 +213,40 @@ const Checkout = () => {
             items: cart,
             total: cartTotal,
             address: orderAddress,
-            addressId: selectedAddressId
+            addressId: selectedAddressId,
+            paymentMethod: paymentMethod
         };
 
         try {
             const token = localStorage.getItem('token');
             const response = await fetch('/api/orders', {
                 method: 'POST',
-                headers: { 
+                headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`
                 },
                 body: JSON.stringify(orderData)
             });
 
-            if (response.ok) {
-                alert('Order placed successfully!');
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Failed to place order');
+            }
+
+            const createdOrder = await response.json();
+
+            if (paymentMethod === 'cod') {
+                // COD order placed directly
+                alert('Order placed successfully! Pay on delivery.');
                 clearCart();
                 navigate('/');
             } else {
-                alert('Failed to place order. Please try again.');
+                // Initiate online payment
+                await initiateRazorpayPayment(createdOrder);
             }
         } catch (error) {
             console.error('Order error:', error);
-            alert('Something went wrong. Please try again.');
-        } finally {
+            alert(error.message || 'Something went wrong. Please try again.');
             setIsSubmitting(false);
         }
     };
@@ -188,7 +293,7 @@ const Checkout = () => {
                 <div className="checkout-form">
                     <div className="address-section">
                         <h3>Shipping Address</h3>
-                        
+
                         {savedAddresses.length > 0 && !showAddForm && (
                             <div className="address-options">
                                 {savedAddresses.map(addr => (
@@ -215,12 +320,12 @@ const Checkout = () => {
                                             onClick={() => handleDeleteAddress(addr.id)}
                                             className="delete-address-btn"
                                             title="Delete this address"
-                                            style={{ 
-                                                background: '#ff4444', 
-                                                color: 'white', 
-                                                border: 'none', 
-                                                padding: '0.5rem 1rem', 
-                                                borderRadius: '4px', 
+                                            style={{
+                                                background: '#ff4444',
+                                                color: 'white',
+                                                border: 'none',
+                                                padding: '0.5rem 1rem',
+                                                borderRadius: '4px',
                                                 cursor: 'pointer',
                                                 marginLeft: '0.5rem',
                                                 minWidth: '80px'
@@ -276,9 +381,63 @@ const Checkout = () => {
                         )}
                     </div>
 
+                    {/* Payment Method Selection */}
+                    <div className="payment-section">
+                        <h3>Payment Method</h3>
+                        <div className="payment-options">
+                            <label className={`payment-option ${paymentMethod === 'online' ? 'selected' : ''}`}>
+                                <input
+                                    type="radio"
+                                    name="paymentMethod"
+                                    value="online"
+                                    checked={paymentMethod === 'online'}
+                                    onChange={(e) => setPaymentMethod(e.target.value)}
+                                />
+                                <div className="payment-option-content">
+                                    <span className="payment-icon">💳</span>
+                                    <div>
+                                        <strong>Pay Online</strong>
+                                        <p>Credit/Debit Card, UPI, Net Banking</p>
+                                    </div>
+                                </div>
+                            </label>
+                            <label className={`payment-option ${paymentMethod === 'cod' ? 'selected' : ''}`}>
+                                <input
+                                    type="radio"
+                                    name="paymentMethod"
+                                    value="cod"
+                                    checked={paymentMethod === 'cod'}
+                                    onChange={(e) => setPaymentMethod(e.target.value)}
+                                />
+                                <div className="payment-option-content">
+                                    <span className="payment-icon">🏠</span>
+                                    <div>
+                                        <strong>Cash on Delivery</strong>
+                                        <p>Pay when your order arrives</p>
+                                    </div>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    {paymentError && (
+                        <div className="payment-error">
+                            {paymentError}
+                        </div>
+                    )}
+
                     <form onSubmit={handleSubmit} style={{ marginTop: '2rem' }}>
-                        <button type="submit" className="place-order-btn" disabled={isSubmitting || (!selectedAddressId && !showAddForm)}>
-                            {isSubmitting ? 'Processing...' : `Place Order (₹${(cartTotal || 0).toFixed(2)})`}
+                        <button
+                            type="submit"
+                            className="place-order-btn"
+                            disabled={isSubmitting || (!selectedAddressId && !showAddForm)}
+                        >
+                            {isSubmitting
+                                ? 'Processing...'
+                                : paymentMethod === 'online'
+                                    ? `Pay Now (₹${(cartTotal || 0).toFixed(2)})`
+                                    : `Place Order (₹${(cartTotal || 0).toFixed(2)})`
+                            }
                         </button>
                     </form>
                 </div>

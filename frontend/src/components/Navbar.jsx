@@ -104,6 +104,11 @@ const Navbar = () => {
                             )}
                         </div>
                         <div className="user-actions">
+                            <Link to="/orders" className="user-action-link">
+                                {(user.role === 'admin' || user.role === 'superadmin' ||
+                                    (user.roles && (user.roles.includes('admin') || user.roles.includes('superadmin'))))
+                                    ? 'All Orders' : 'My Orders'}
+                            </Link>
                             <Link to="/account-settings" className="user-action-link">Settings</Link>
                             {(user.role === 'superadmin' || (user.roles && user.roles.includes('superadmin'))) && (
                                 <Link to="/super-admin" className="user-action-link">Dashboard</Link>

@@ -1,6 +1,28 @@
+// Load environment variables FIRST before any other imports
+import dotenv from 'dotenv';
+import { fileURLToPath } from 'url';
+import path from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Load .env file with explicit path
+const envPath = path.resolve(__dirname, '.env');
+console.log('📁 Loading .env from:', envPath);
+const result = dotenv.config({ path: envPath });
+
+if (result.error) {
+    console.error('❌ Error loading .env file:', result.error);
+} else {
+    console.log('✅ .env file loaded successfully');
+    console.log('🔑 Environment variables loaded:');
+    console.log('   JWT_SECRET:', process.env.JWT_SECRET ? '✓ Set' : '✗ Not set');
+    console.log('   RAZORPAY_KEY_ID:', process.env.RAZORPAY_KEY_ID ? '✓ Set' : '✗ Not set');
+    console.log('   RAZORPAY_KEY_SECRET:', process.env.RAZORPAY_KEY_SECRET ? '✓ Set' : '✗ Not set');
+}
+
 import express from 'express';
 import cors from 'cors';
-import dotenv from 'dotenv';
 import { setupDB } from './db.js';
 import authRoutes from './routes/auth.js';
 import productRoutes from './routes/products.js';
@@ -12,13 +34,7 @@ import reviewRoutes from './routes/reviews.js';
 import wishlistRoutes from './routes/wishlist.js';
 import inventoryRoutes from './routes/inventory.js';
 import uploadRoutes from './routes/upload.js';
-import path from 'path';
-import { fileURLToPath } from 'url';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-dotenv.config();
+import paymentRoutes from './routes/payments.js';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -36,6 +52,10 @@ if (!process.env.SUPER_ADMIN_PASSWORD || process.env.SUPER_ADMIN_PASSWORD === 'A
     }
 }
 
+if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
+    console.warn('⚠️  WARNING: Razorpay API keys not configured. Set RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET for payments.');
+}
+
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 
@@ -50,6 +70,7 @@ app.use('/api/reviews', reviewRoutes);
 app.use('/api/wishlist', wishlistRoutes);
 app.use('/api/inventory', inventoryRoutes);
 app.use('/api/upload', uploadRoutes);
+app.use('/api/payments', paymentRoutes);
 
 // Serve static files from frontend build
 app.use(express.static(path.join(__dirname, '../frontend/dist')));

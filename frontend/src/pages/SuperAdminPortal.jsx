@@ -6,6 +6,8 @@ import { getProductImageSrc } from '../utils/imageUtils';
 import { calculateProductPrices } from '../utils/priceUtils';
 import ProductForm from '../components/ProductForm';
 import ProductImportExport from '../components/ProductImportExport';
+import SearchInput from '../components/SearchInput';
+import Pagination from '../components/Pagination';
 import './SuperAdminPortal.css';
 
 const statusOptions = ['pending', 'processing', 'shipped', 'delivered', 'cancelled'];
@@ -32,6 +34,19 @@ const SuperAdminPortal = () => {
     const [showProductForm, setShowProductForm] = useState(false);
     const [editingProduct, setEditingProduct] = useState(null);
     const [editFormData, setEditFormData] = useState(null);
+
+    // Search and Pagination States
+    const [userSearch, setUserSearch] = useState('');
+    const [userPage, setUserPage] = useState(1);
+    const [userPagination, setUserPagination] = useState({ total: 0, totalPages: 1 });
+
+    const [orderSearch, setOrderSearch] = useState('');
+    const [orderPage, setOrderPage] = useState(1);
+    const [orderPagination, setOrderPagination] = useState({ total: 0, totalPages: 1 });
+
+    const [productSearch, setProductSearch] = useState('');
+    const [productPage, setProductPage] = useState(1);
+    const ITEMS_PER_PAGE = 10;
 
     const headers = useMemo(() => {
         const token = localStorage.getItem('token');
@@ -61,35 +76,73 @@ const SuperAdminPortal = () => {
         setLoading(true);
         setError('');
         try {
-            const [overviewRes, usersRes, ordersRes, metalPricesRes] = await Promise.all([
+            const [overviewRes, metalPricesRes] = await Promise.all([
                 fetch('/api/admin/overview', { headers }),
-                fetch('/api/admin/users', { headers }),
-                fetch('/api/admin/orders', { headers }),
                 fetch('/api/admin/metal-prices', { headers })
             ]);
 
             if (!overviewRes.ok) throw new Error('Failed to load overview');
-            if (!usersRes.ok) throw new Error('Failed to load users');
-            if (!ordersRes.ok) throw new Error('Failed to load orders');
             if (!metalPricesRes.ok) throw new Error('Failed to load metal prices');
 
-            const [overviewData, usersData, ordersData, metalPricesData] = await Promise.all([
+            const [overviewData, metalPricesData] = await Promise.all([
                 overviewRes.json(),
-                usersRes.json(),
-                ordersRes.json(),
                 metalPricesRes.json()
             ]);
 
             setOverview(overviewData);
-            setUsers(usersData);
-            setOrders(ordersData);
             setMetalPrices(metalPricesData.prices || []);
             setLiveRates(metalPricesData.liveRates || null);
+
+            // Fetch paginated data
+            await Promise.all([
+                fetchUsers(),
+                fetchOrders()
+            ]);
         } catch (err) {
             setError(err.message);
         } finally {
             setLoading(false);
         }
+    };
+
+    const fetchUsers = async (page = userPage, search = userSearch) => {
+        try {
+            const params = new URLSearchParams({ page, limit: ITEMS_PER_PAGE, search });
+            const res = await fetch(`/api/admin/users?${params}`, { headers });
+            if (!res.ok) throw new Error('Failed to load users');
+            const data = await res.json();
+            setUsers(data.users || []);
+            setUserPagination(data.pagination || { total: 0, totalPages: 1 });
+        } catch (err) {
+            setError(err.message);
+        }
+    };
+
+    const fetchOrders = async (page = orderPage, search = orderSearch) => {
+        try {
+            const params = new URLSearchParams({ page, limit: ITEMS_PER_PAGE, search });
+            const res = await fetch(`/api/admin/orders?${params}`, { headers });
+            if (!res.ok) throw new Error('Failed to load orders');
+            const data = await res.json();
+            setOrders(data.orders || []);
+            setOrderPagination(data.pagination || { total: 0, totalPages: 1 });
+        } catch (err) {
+            setError(err.message);
+        }
+    };
+
+    // Handle user search
+    const handleUserSearch = (search) => {
+        setUserSearch(search);
+        setUserPage(1);
+        fetchUsers(1, search);
+    };
+
+    // Handle order search
+    const handleOrderSearch = (search) => {
+        setOrderSearch(search);
+        setOrderPage(1);
+        fetchOrders(1, search);
     };
 
     const updateUserRole = async (userId, role) => {
@@ -104,7 +157,7 @@ const SuperAdminPortal = () => {
             const data = await res.json();
             if (!res.ok) throw new Error(data.message || 'Failed to update role');
             setUsers((prev) => prev.map((u) => (u.id === userId ? data : u)));
-            
+
             if (user.id === userId) {
                 alert('Your role has been changed. Please log in again.');
                 logout();
@@ -174,11 +227,11 @@ const SuperAdminPortal = () => {
             });
             const data = await res.json();
             if (!res.ok) throw new Error(data.message || 'Failed to update metal price');
-            
+
             // Update local state
             setMetalPrices(prev => prev.map(m => m.metal === metal ? { ...m, pricePerGram: parseFloat(newPrice) } : m));
             setMessage({ type: 'success', text: `${metal.toUpperCase()} price updated successfully!` });
-            
+
             // Reload page to refresh prices throughout the application
             setTimeout(() => window.location.reload(), 800);
         } catch (err) {
@@ -516,9 +569,16 @@ const SuperAdminPortal = () => {
                     <div className="section-header">
                         <div>
                             <p className="eyebrow">Sellers & Buyers</p>
-                            <h3>People</h3>
+                            <h3>People ({userPagination.total})</h3>
                         </div>
-                        <button className="ghost" onClick={bootstrap}>Refresh</button>
+                        <button className="ghost" onClick={() => fetchUsers(1, userSearch)}>Refresh</button>
+                    </div>
+                    <div className="search-row">
+                        <SearchInput
+                            placeholder="Search users by name or email..."
+                            onSearch={handleUserSearch}
+                            value={userSearch}
+                        />
                     </div>
                     <div className="table">
                         <div className="row head">
@@ -527,7 +587,9 @@ const SuperAdminPortal = () => {
                             <div>Role</div>
                             <div>Actions</div>
                         </div>
-                        {users.map((u) => (
+                        {users.length === 0 ? (
+                            <div className="row"><div className="muted">No users found</div></div>
+                        ) : users.map((u) => (
                             <div key={u.id} className="row">
                                 <div>
                                     <div className="title">{u.name}</div>
@@ -560,15 +622,29 @@ const SuperAdminPortal = () => {
                             </div>
                         ))}
                     </div>
+                    {userPagination.totalPages > 1 && (
+                        <Pagination
+                            currentPage={userPage}
+                            totalPages={userPagination.totalPages}
+                            onPageChange={(page) => { setUserPage(page); fetchUsers(page, userSearch); }}
+                        />
+                    )}
                 </div>
 
                 <div className="card">
                     <div className="section-header">
                         <div>
                             <p className="eyebrow">Orders</p>
-                            <h3>Pipeline</h3>
+                            <h3>Pipeline ({orderPagination.total})</h3>
                         </div>
-                        <button className="ghost" onClick={bootstrap}>Refresh</button>
+                        <button className="ghost" onClick={() => fetchOrders(1, orderSearch)}>Refresh</button>
+                    </div>
+                    <div className="search-row">
+                        <SearchInput
+                            placeholder="Search orders by ID or customer..."
+                            onSearch={handleOrderSearch}
+                            value={orderSearch}
+                        />
                     </div>
                     <div className="table">
                         <div className="row head">
@@ -577,7 +653,9 @@ const SuperAdminPortal = () => {
                             <div>Status</div>
                             <div>Value</div>
                         </div>
-                        {orders.map((o) => (
+                        {orders.length === 0 ? (
+                            <div className="row"><div className="muted">No orders found</div></div>
+                        ) : orders.map((o) => (
                             <div key={o.id} className="row">
                                 <div>
                                     <div className="title">#{o.id}</div>
@@ -602,6 +680,13 @@ const SuperAdminPortal = () => {
                             </div>
                         ))}
                     </div>
+                    {orderPagination.totalPages > 1 && (
+                        <Pagination
+                            currentPage={orderPage}
+                            totalPages={orderPagination.totalPages}
+                            onPageChange={(page) => { setOrderPage(page); fetchOrders(page, orderSearch); }}
+                        />
+                    )}
                 </div>
             </div>
 
@@ -642,42 +727,82 @@ const SuperAdminPortal = () => {
                 {/* Import/Export Section */}
                 <ProductImportExport onImportSuccess={() => window.location.reload()} />
 
+                {/* Product Search */}
+                <div className="search-row">
+                    <SearchInput
+                        placeholder="Search products by name..."
+                        onSearch={setProductSearch}
+                        value={productSearch}
+                    />
+                    <span className="muted">Showing {(() => {
+                        const filtered = products.filter(p =>
+                            p.name?.toLowerCase().includes(productSearch.toLowerCase()) ||
+                            p.description?.toLowerCase().includes(productSearch.toLowerCase())
+                        );
+                        const start = (productPage - 1) * ITEMS_PER_PAGE;
+                        const paginated = filtered.slice(start, start + ITEMS_PER_PAGE);
+                        return `${paginated.length} of ${filtered.length}`;
+                    })()} products</span>
+                </div>
+
                 <div className="products-list">
-                    {products.length === 0 ? (
-                        <p className="no-products">No products yet.</p>
-                    ) : (
-                        <div className="product-grid">
-                            {products.map(product => (
-                                <div key={product.id} className="product-card">
-                                    <div className="product-image">
-                                        <img src={getProductImageSrc(product)} alt={product.name} />
+                    {(() => {
+                        const filtered = products.filter(p =>
+                            p.name?.toLowerCase().includes(productSearch.toLowerCase()) ||
+                            p.description?.toLowerCase().includes(productSearch.toLowerCase())
+                        );
+                        const totalFilteredPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
+                        const start = (productPage - 1) * ITEMS_PER_PAGE;
+                        const paginated = filtered.slice(start, start + ITEMS_PER_PAGE);
+
+                        return (
+                            <>
+                                {paginated.length === 0 ? (
+                                    <p className="no-products">No products found.</p>
+                                ) : (
+                                    <div className="product-grid">
+                                        {paginated.map(product => (
+                                            <div key={product.id} className="product-card">
+                                                <span className="product-id-badge">#{product.id}</span>
+                                                <div className="product-image">
+                                                    <img src={getProductImageSrc(product)} alt={product.name} />
+                                                </div>
+                                                <div className="product-details">
+                                                    <h4>{product.name}</h4>
+                                                    <p className="product-price">₹{(productPrices[product.id] || 0).toFixed(2)}</p>
+                                                    <p className="product-description">{product.description?.substring(0, 100) || 'No description'}...</p>
+                                                    {product.sellerId && (
+                                                        <span className="seller-badge">👤 Seller Product</span>
+                                                    )}
+                                                </div>
+                                                <div className="product-actions">
+                                                    <button
+                                                        onClick={() => handleEditClick(product)}
+                                                        className="edit-product-btn"
+                                                    >
+                                                        ✏️ Edit
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleDeleteProduct(product.id)}
+                                                        className="delete-product-btn"
+                                                    >
+                                                        🗑️ Delete
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        ))}
                                     </div>
-                                    <div className="product-details">
-                                        <h4>{product.name}</h4>
-                                        <p className="product-price">₹{(productPrices[product.id] || 0).toFixed(2)}</p>
-                                        <p className="product-description">{product.description?.substring(0, 100) || 'No description'}...</p>
-                                        {product.sellerId && (
-                                            <span className="seller-badge">👤 Seller Product</span>
-                                        )}
-                                    </div>
-                                    <div className="product-actions">
-                                        <button
-                                            onClick={() => handleEditClick(product)}
-                                            className="edit-product-btn"
-                                        >
-                                            ✏️ Edit
-                                        </button>
-                                        <button
-                                            onClick={() => handleDeleteProduct(product.id)}
-                                            className="delete-product-btn"
-                                        >
-                                            🗑️ Delete
-                                        </button>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    )}
+                                )}
+                                {totalFilteredPages > 1 && (
+                                    <Pagination
+                                        currentPage={productPage}
+                                        totalPages={totalFilteredPages}
+                                        onPageChange={setProductPage}
+                                    />
+                                )}
+                            </>
+                        );
+                    })()}
                 </div>
             </div>
         </section>

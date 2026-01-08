@@ -40,9 +40,43 @@ router.get('/overview', async (req, res) => {
 router.get('/users', async (req, res) => {
     const db = getDB();
     try {
-        const users = await db.all('SELECT id, name, email, role, roles, createdAt FROM users ORDER BY createdAt DESC');
+        const { page = 1, limit = 10, search = '' } = req.query;
+        const pageNum = Math.max(1, parseInt(page));
+        const limitNum = Math.min(100, Math.max(1, parseInt(limit)));
+        const offset = (pageNum - 1) * limitNum;
+
+        let whereClause = '';
+        let params = [];
+
+        if (search) {
+            whereClause = 'WHERE name LIKE ? OR email LIKE ?';
+            params = [`%${search}%`, `%${search}%`];
+        }
+
+        // Get total count
+        const countQuery = `SELECT COUNT(*) as total FROM users ${whereClause}`;
+        const { total } = await db.get(countQuery, params);
+
+        // Get paginated users
+        const usersQuery = `
+            SELECT id, name, email, role, roles, createdAt 
+            FROM users 
+            ${whereClause}
+            ORDER BY createdAt DESC
+            LIMIT ? OFFSET ?
+        `;
+        const users = await db.all(usersQuery, [...params, limitNum, offset]);
         const parsedUsers = (users || []).map((u) => ({ ...u, roles: parseRoles(u) }));
-        res.json(parsedUsers);
+
+        res.json({
+            users: parsedUsers,
+            pagination: {
+                page: pageNum,
+                limit: limitNum,
+                total,
+                totalPages: Math.ceil(total / limitNum)
+            }
+        });
     } catch (err) {
         console.error('Super admin users error:', err);
         res.status(500).json({ message: 'Failed to load users', error: err.message });
@@ -147,12 +181,45 @@ router.delete('/users/:id', async (req, res) => {
 router.get('/orders', async (req, res) => {
     const db = getDB();
     try {
-        const orders = await db.all(`
+        const { page = 1, limit = 10, search = '', status = '' } = req.query;
+        const pageNum = Math.max(1, parseInt(page));
+        const limitNum = Math.min(100, Math.max(1, parseInt(limit)));
+        const offset = (pageNum - 1) * limitNum;
+
+        let whereClauses = [];
+        let params = [];
+
+        if (search) {
+            whereClauses.push('(u.name LIKE ? OR u.email LIKE ? OR CAST(o.id AS TEXT) LIKE ?)');
+            params.push(`%${search}%`, `%${search}%`, `%${search}%`);
+        }
+
+        if (status) {
+            whereClauses.push('o.status = ?');
+            params.push(status);
+        }
+
+        const whereSQL = whereClauses.length > 0 ? `WHERE ${whereClauses.join(' AND ')}` : '';
+
+        // Get total count
+        const countQuery = `
+            SELECT COUNT(*) as total 
+            FROM orders o
+            LEFT JOIN users u ON o.userId = u.id
+            ${whereSQL}
+        `;
+        const { total } = await db.get(countQuery, params);
+
+        // Get paginated orders
+        const ordersQuery = `
             SELECT o.*, u.name as customerName, u.email as customerEmail
             FROM orders o
             LEFT JOIN users u ON o.userId = u.id
+            ${whereSQL}
             ORDER BY o.date DESC
-        `);
+            LIMIT ? OFFSET ?
+        `;
+        const orders = await db.all(ordersQuery, [...params, limitNum, offset]);
 
         const parsedOrders = (orders || []).map((order) => ({
             ...order,
@@ -160,7 +227,15 @@ router.get('/orders', async (req, res) => {
             address: typeof order.address === 'string' ? JSON.parse(order.address) : order.address
         }));
 
-        res.json(parsedOrders);
+        res.json({
+            orders: parsedOrders,
+            pagination: {
+                page: pageNum,
+                limit: limitNum,
+                total,
+                totalPages: Math.ceil(total / limitNum)
+            }
+        });
     } catch (err) {
         console.error('Super admin orders error:', err);
         res.status(500).json({ message: 'Failed to load orders', error: err.message });
@@ -223,12 +298,12 @@ router.get('/metal-prices', async (req, res) => {
     const db = getDB();
     try {
         const prices = await db.all('SELECT * FROM metal_prices ORDER BY metal ASC');
-        
+
         // Also fetch live rates for reference
         const liveRates = await fetchLiveRates();
-        
-        res.json({ 
-            success: true, 
+
+        res.json({
+            success: true,
             prices,
             liveRates: liveRates || null
         });

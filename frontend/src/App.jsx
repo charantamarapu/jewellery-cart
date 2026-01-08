@@ -13,6 +13,7 @@ import SellerDashboard from './pages/SellerDashboard';
 import AccountSettings from './pages/AccountSettings';
 import SearchResults from './pages/SearchResults';
 import SuperAdminPortal from './pages/SuperAdminPortal';
+import Orders from './pages/Orders';
 import Footer from './components/Footer';
 import ProtectedRoute from './components/ProtectedRoute';
 
@@ -52,6 +53,11 @@ function App() {
                         <Route path="/account-settings" element={
                             <ProtectedRoute>
                                 <AccountSettings />
+                            </ProtectedRoute>
+                        } />
+                        <Route path="/orders" element={
+                            <ProtectedRoute>
+                                <Orders />
                             </ProtectedRoute>
                         } />
                         <Route path="/search" element={<SearchResults />} />

@@ -7,12 +7,38 @@ export const AuthProvider = ({ children }) => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const token = localStorage.getItem('token');
-        const savedUser = localStorage.getItem('user');
-        if (token && savedUser) {
-            setUser(JSON.parse(savedUser));
-        }
-        setLoading(false);
+        const validateToken = async () => {
+            const token = localStorage.getItem('token');
+            const savedUser = localStorage.getItem('user');
+
+            if (token && savedUser) {
+                try {
+                    // Validate token by calling /api/auth/me
+                    const response = await fetch('/api/auth/me', {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+
+                    if (response.ok) {
+                        const userData = await response.json();
+                        localStorage.setItem('user', JSON.stringify(userData));
+                        setUser(userData);
+                    } else if (response.status === 403 || response.status === 401) {
+                        // Token is invalid or expired, clear it
+                        console.log('Token expired or invalid, clearing session');
+                        localStorage.removeItem('token');
+                        localStorage.removeItem('user');
+                        setUser(null);
+                    }
+                } catch (error) {
+                    console.error('Token validation error:', error);
+                    // Keep existing user data if network error
+                    setUser(JSON.parse(savedUser));
+                }
+            }
+            setLoading(false);
+        };
+
+        validateToken();
     }, []);
 
     const login = async (email, password) => {

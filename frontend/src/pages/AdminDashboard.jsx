@@ -7,7 +7,11 @@ import { calculateProductPrices } from '../utils/priceUtils';
 import ProductForm from '../components/ProductForm';
 import ProductImportExport from '../components/ProductImportExport';
 import LivePrices from '../components/LivePrices';
+import SearchInput from '../components/SearchInput';
+import Pagination from '../components/Pagination';
 import './AdminDashboard.css';
+
+const ITEMS_PER_PAGE = 10;
 
 const AdminDashboard = () => {
     const { products, addProduct, updateProduct, deleteProduct } = useProducts();
@@ -18,6 +22,10 @@ const AdminDashboard = () => {
     const [showProductForm, setShowProductForm] = useState(false);
     const [editingProduct, setEditingProduct] = useState(null);
     const [editFormData, setEditFormData] = useState(null);
+
+    // Search and pagination state
+    const [productSearch, setProductSearch] = useState('');
+    const [productPage, setProductPage] = useState(1);
 
     useEffect(() => {
         if (!user || (user.role !== 'admin' && user.role !== 'superadmin' && user.role !== 'seller')) {
@@ -320,48 +328,89 @@ const AdminDashboard = () => {
                         </div>
                     )}
 
+
                     {/* Import/Export Section */}
                     <ProductImportExport onImportSuccess={() => window.location.reload()} />
 
+                    {/* Search */}
+                    <div className="search-row">
+                        <SearchInput
+                            placeholder="Search products by name..."
+                            onSearch={(val) => { setProductSearch(val); setProductPage(1); }}
+                            value={productSearch}
+                        />
+                        <span className="muted">
+                            {(() => {
+                                const filtered = products.filter(p =>
+                                    p.name?.toLowerCase().includes(productSearch.toLowerCase()) ||
+                                    p.description?.toLowerCase().includes(productSearch.toLowerCase())
+                                );
+                                return `${filtered.length} products`;
+                            })()}
+                        </span>
+                    </div>
+
                     <div className="products-list">
-                        {products.length === 0 ? (
-                            <p className="no-products">No products yet. Create your first jewelry product!</p>
-                        ) : (
-                            <div className="product-grid">
-                                {products.map(product => (
-                                    <div key={product.id} className="product-card">
-                                        <div className="product-image">
-                                            <img src={getProductImageSrc(product)} alt={product.name} />
+                        {(() => {
+                            const filtered = products.filter(p =>
+                                p.name?.toLowerCase().includes(productSearch.toLowerCase()) ||
+                                p.description?.toLowerCase().includes(productSearch.toLowerCase())
+                            );
+                            const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
+                            const start = (productPage - 1) * ITEMS_PER_PAGE;
+                            const paginated = filtered.slice(start, start + ITEMS_PER_PAGE);
+
+                            return (
+                                <>
+                                    {paginated.length === 0 ? (
+                                        <p className="no-products">No products found.</p>
+                                    ) : (
+                                        <div className="product-grid">
+                                            {paginated.map(product => (
+                                                <div key={product.id} className="product-card">
+                                                    <span className="product-id-badge">#{product.id}</span>
+                                                    <div className="product-image">
+                                                        <img src={getProductImageSrc(product)} alt={product.name} />
+                                                    </div>
+                                                    <div className="product-details">
+                                                        <h4>{product.name}</h4>
+                                                        <p className="product-price">₹{(product.price || 0).toFixed(2)}</p>
+                                                        <p className="product-description">{product.description?.substring(0, 100) || 'No description'}...</p>
+                                                        {product.sellerName && (
+                                                            <span className="seller-info">by {product.sellerName}</span>
+                                                        )}
+                                                        <div className="stock-info">
+                                                            <span className="stock-badge">📦 Stock: {product.stock || 0}</span>
+                                                        </div>
+                                                    </div>
+                                                    <div className="product-actions">
+                                                        <button
+                                                            onClick={() => handleEditClick(product)}
+                                                            className="edit-product-btn"
+                                                        >
+                                                            ✏️ Edit
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleDeleteProduct(product.id)}
+                                                            className="delete-product-btn"
+                                                        >
+                                                            🗑️ Delete
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            ))}
                                         </div>
-                                        <div className="product-details">
-                                            <h4>{product.name}</h4>
-                                            <p className="product-price">₹{(product.price || 0).toFixed(2)}</p>
-                                            <p className="product-description">{product.description?.substring(0, 100) || 'No description'}...</p>
-                                            {product.sellerId && (
-                                                <span className="seller-badge">👤 Seller Product</span>
-                                            )}
-                                            <div className="stock-info">
-                                                <span className="stock-badge">📦 Stock: {product.stock || 0}</span>
-                                            </div>
-                                        </div>
-                                        <div className="product-actions">
-                                            <button
-                                                onClick={() => handleEditClick(product)}
-                                                className="edit-product-btn"
-                                            >
-                                                ✏️ Edit
-                                            </button>
-                                            <button
-                                                onClick={() => handleDeleteProduct(product.id)}
-                                                className="delete-product-btn"
-                                            >
-                                                🗑️ Delete
-                                            </button>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        )}
+                                    )}
+                                    {totalPages > 1 && (
+                                        <Pagination
+                                            currentPage={productPage}
+                                            totalPages={totalPages}
+                                            onPageChange={setProductPage}
+                                        />
+                                    )}
+                                </>
+                            );
+                        })()}
                     </div>
                 </div>
             </div>
@@ -370,3 +419,4 @@ const AdminDashboard = () => {
 };
 
 export default AdminDashboard;
+

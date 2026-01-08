@@ -130,12 +130,16 @@ const ProductList = () => {
                             <div className="product-grid">
                                 {products.map((product) => (
                                     <div key={product.id} className="product-card">
+                                        <span className="product-id-badge">#{product.id}</span>
                                         {product.categoryName && (
                                             <span className="category-badge">{product.categoryName}</span>
                                         )}
                                         <img src={getProductImageSrc(product)} alt={product.name} className="product-image" />
                                         <div className="product-info">
                                             <h3>{product.name}</h3>
+                                            {product.sellerName && (
+                                                <p className="seller-name">by {product.sellerName}</p>
+                                            )}
                                             {product.avgRating > 0 && (
                                                 <div className="rating">
                                                     <span className="stars">{'⭐'.repeat(Math.round(product.avgRating))}</span>

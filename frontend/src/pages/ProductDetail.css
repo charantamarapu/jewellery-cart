@@ -102,6 +102,31 @@
 }
 
 /* Info Section */
+/* Product ID and Seller Info */
+.product-id-seller {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.product-id {
+    font-family: monospace;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    background: var(--bg-light);
+    padding: 0.25rem 0.6rem;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+}
+
+.seller-badge {
+    font-size: 0.9rem;
+    color: var(--primary);
+    font-weight: 500;
+}
+
 .detail-info h1 {
     font-family: var(--font-heading);
     font-size: 2rem;
@@ -298,9 +323,12 @@
 }
 
 @keyframes pulse-small {
-    0%, 100% {
+
+    0%,
+    100% {
         opacity: 1;
     }
+
     50% {
         opacity: 0.7;
     }
@@ -442,6 +470,7 @@
     font-weight: 600;
     color: #333;
 }
+
 .slider-input {
     display: none;
 }
@@ -479,11 +508,11 @@
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
-.slider-input:checked ~ .slider {
+.slider-input:checked~.slider {
     background-color: #3498db;
 }
 
-.slider-input:checked ~ .slider::after {
+.slider-input:checked~.slider::after {
     left: 30px;
 }
 

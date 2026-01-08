@@ -123,6 +123,45 @@
     transition: all 0.3s ease;
     display: flex;
     flex-direction: column;
+    position: relative;
+}
+
+/* Search Row */
+.search-row {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem 0;
+    flex-wrap: wrap;
+}
+
+.search-row .muted {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+/* Product ID Badge */
+.product-id-badge {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: rgba(0, 0, 0, 0.7);
+    color: white;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    font-family: monospace;
+    z-index: 1;
+}
+
+/* Seller Info */
+.seller-info {
+    display: inline-block;
+    color: var(--primary);
+    font-size: 0.9rem;
+    font-weight: 500;
+    margin-bottom: 0.5rem;
 }
 
 .product-card:hover {

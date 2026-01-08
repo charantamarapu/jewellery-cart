@@ -91,11 +91,12 @@ router.get('/', async (req, res) => {
         const metalPrices = await getMetalPrices(db);
         const metalPricesMap = metalPrices ? metalPrices : {};
 
-        // Get paginated products with category, inventory, and average rating
+        // Get paginated products with category, inventory, seller, and average rating
         const productsQuery = `
             SELECT p.*, 
                    c.name as categoryName,
                    c.slug as categorySlug,
+                   u.name as sellerName,
                    COALESCE(AVG(r.rating), 0) as avgRating,
                    COUNT(DISTINCT r.id) as reviewCount,
                    i.metal,
@@ -113,6 +114,7 @@ router.get('/', async (req, res) => {
                    i.makingChargePerGram
             FROM products p
             LEFT JOIN categories c ON p.categoryId = c.id
+            LEFT JOIN users u ON p.sellerId = u.id
             LEFT JOIN jewelry_inventory i ON p.id = i.productId
             LEFT JOIN reviews r ON p.id = r.productId
             ${whereSQL}
@@ -229,6 +231,7 @@ router.get('/:id', async (req, res) => {
             SELECT p.*, 
                    c.name as categoryName,
                    c.slug as categorySlug,
+                   u.name as sellerName,
                    COALESCE(AVG(r.rating), 0) as avgRating,
                    COUNT(DISTINCT r.id) as reviewCount,
                    i.metal,
@@ -246,6 +249,7 @@ router.get('/:id', async (req, res) => {
                    i.makingChargePerGram
             FROM products p
             LEFT JOIN categories c ON p.categoryId = c.id
+            LEFT JOIN users u ON p.sellerId = u.id
             LEFT JOIN jewelry_inventory i ON p.id = i.productId
             LEFT JOIN reviews r ON p.id = r.productId
             WHERE p.id = ?
@@ -289,7 +293,8 @@ router.post('/', authenticateToken, isSellerOrAdmin, async (req, res) => {
     }
 
     try {
-        const sellerId = req.user.role === 'seller' ? req.user.id : null;
+        // Always set sellerId to the creator's ID
+        const sellerId = req.user.id;
         const productStock = stock !== undefined ? stock : 0;
         const imagesJSON = images ? JSON.stringify(images) : null;
 

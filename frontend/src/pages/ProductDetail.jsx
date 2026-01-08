@@ -189,14 +189,14 @@ const ProductDetail = () => {
             }
 
             const newReview = await response.json();
-            
+
             // Update reviews list
             if (userReview) {
                 setReviews(reviews.map(r => r.id === userReview.id ? newReview : r));
             } else {
                 setReviews([newReview, ...reviews]);
             }
-            
+
             setUserReview(newReview);
             toast.success(userReview ? 'Review updated successfully!' : 'Review submitted successfully!');
         } catch (err) {
@@ -316,6 +316,12 @@ const ProductDetail = () => {
                     )}
                 </div>
                 <div className="detail-info">
+                    <div className="product-id-seller">
+                        <span className="product-id">Product ID: #{product.id}</span>
+                        {product.sellerName && (
+                            <span className="seller-badge">Sold by: {product.sellerName}</span>
+                        )}
+                    </div>
                     <h1>{product.name}</h1>
                     <p className="detail-price">₹{(product.price || inventory?.totalPrice || 0).toFixed(2)}</p>
 

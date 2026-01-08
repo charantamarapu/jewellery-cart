@@ -116,6 +116,7 @@ export const setupDB = async () => {
                             address TEXT,
                             date DATETIME DEFAULT CURRENT_TIMESTAMP,
                             status TEXT DEFAULT 'pending',
+                            paymentStatus TEXT DEFAULT 'pending',
                             FOREIGN KEY (userId) REFERENCES users(id),
                             FOREIGN KEY (addressId) REFERENCES addresses(id)
                         );
@@ -193,6 +194,19 @@ export const setupDB = async () => {
                             FOREIGN KEY (updatedBy) REFERENCES users(id)
                         );
 
+                        CREATE TABLE IF NOT EXISTS payments (
+                            id INTEGER PRIMARY KEY AUTOINCREMENT,
+                            orderId INTEGER,
+                            razorpayOrderId TEXT NOT NULL,
+                            razorpayPaymentId TEXT,
+                            razorpaySignature TEXT,
+                            amount REAL NOT NULL,
+                            currency TEXT DEFAULT 'INR',
+                            status TEXT DEFAULT 'created',
+                            createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+                            FOREIGN KEY (orderId) REFERENCES orders(id)
+                        );
+
                         CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
                         CREATE INDEX IF NOT EXISTS idx_products_sellerId ON products(sellerId);
                         CREATE INDEX IF NOT EXISTS idx_products_categoryId ON products(categoryId);
@@ -216,6 +230,35 @@ export const setupDB = async () => {
                     await ensureSuperAdmin();
                     await seedDefaultCategories();
                     await seedMetalPrices();
+
+                    // Migration: Add paymentStatus column to orders if not exists
+                    try {
+                        await dbRun("ALTER TABLE orders ADD COLUMN paymentStatus TEXT DEFAULT 'pending'");
+                        console.log('✅ Added paymentStatus column to orders');
+                    } catch (e) {
+                        // Column likely already exists, ignore
+                    }
+
+                    // Migration: Set sellerId for products that don't have one
+                    try {
+                        const adminUser = await dbGet("SELECT id FROM users WHERE role = 'superadmin' OR role = 'admin' LIMIT 1");
+                        if (adminUser) {
+                            const result = await dbRun("UPDATE products SET sellerId = ? WHERE sellerId IS NULL", [adminUser.id]);
+                            if (result.changes > 0) {
+                                console.log(`✅ Updated ${result.changes} products with sellerId`);
+                            }
+                        }
+                    } catch (e) {
+                        console.error('Migration error:', e);
+                    }
+
+                    // Migration: Add transactionId column to orders if not exists
+                    try {
+                        await dbRun("ALTER TABLE orders ADD COLUMN transactionId TEXT");
+                        console.log('✅ Added transactionId column to orders');
+                    } catch (e) {
+                        // Column likely already exists, ignore
+                    }
 
                     console.log('✅ SQLite Database connected and initialized');
                     resolve();

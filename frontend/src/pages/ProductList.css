@@ -90,6 +90,29 @@
     letter-spacing: 0.5px;
 }
 
+/* Product ID Badge */
+.product-id-badge {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: rgba(0, 0, 0, 0.7);
+    color: var(--white);
+    padding: 0.25rem 0.6rem;
+    border-radius: var(--radius-sm);
+    font-size: 0.7rem;
+    font-weight: 600;
+    z-index: 1;
+    font-family: monospace;
+}
+
+/* Seller Name */
+.seller-name {
+    font-size: 0.85rem;
+    color: var(--primary);
+    margin: 0 0 0.5rem 0;
+    font-weight: 500;
+}
+
 /* Product Image */
 .product-image {
     width: 100%;
